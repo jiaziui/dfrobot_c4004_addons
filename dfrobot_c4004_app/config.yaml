@@ -1,7 +1,8 @@
-name: "Hello world"
-description: "My first real app!"
-version: "1.1.1"
-slug: "hello_world"
+name: DFRobot C4004 App
+description: This repository contains addons for Home Assistant that integrate with the C4004 sensor from DFRobot.
+version: 0.0.17
+slug: dfrobot_c4004_app
+url: https://github.com/jiaziui/DFRobot_C4004_Addons
 init: false
 arch:
   - aarch64
@@ -9,10 +10,33 @@ arch:
 startup: services
 boot: auto
 ingress: true
-ingress_port: 8000
-panel_title: "Hello World"
+ingress_port: 42069
+panel_title: "DFRobot C4004"
 panel_icon: "mdi:web"
 panel_admin: false
 ports:
-  8000/tcp: null
+  42069/tcp: null
+
+ports_description:
+  42069/tcp: "Web server for the DFRobot C4004 App"
   
+homeassistant_api: true
+auth_api: true
+hassio_api: true
+stdin: true
+stdin_open: true
+
+map:
+  - config:rw
+
+options:
+  c4004_entity_prefix: auto
+  debug_logging: true
+  ha_base_url: ""
+  ha_long_lived_token: ""
+
+schema:
+  c4004_entity_prefix: str
+  debug_logging: bool
+  ha_base_url: str?
+  ha_long_lived_token: password?

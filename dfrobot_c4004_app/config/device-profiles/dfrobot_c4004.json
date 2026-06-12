@@ -1,0 +1,47 @@
+{
+    "id": "dfrobot_c4004",
+    "schemaVersion": "1.0",
+    "label": "DFRobot C4004",
+    "model": "DFRobot C4004",
+    "manufacturer": "DFRobot",
+    // "iconUrl": "./icons/devices/dfrobot_c4004.png",
+    "capabilities": {
+      "tracking": true,
+      "zones": true,
+      "exclusionZones": true,
+      "entryZones": true,
+      "polygonZones": true,
+      "distanceOnlyTracking": false,
+      "sensors": {
+        "mmwavePresence": "1", // 1.c4004
+      }
+    },
+    "limits": {
+      "maxZones": 4,
+      "maxExclusionZones": 2,
+      "maxEntryZones": 2,
+      "maxTargets": 3,
+      "maxRangeMeters": 6,
+      "fieldOfViewDegrees": 120
+    },
+    "services": {
+      "getBuildFlags": {
+        "domain": "esphome",
+        "template": "${name}_get_build_flags"
+      },
+      "setUpdateManifest": {
+        "domain": "esphome",
+        "template": "${name}_set_update_manifest"
+      }
+    },
+
+
+
+    "entities": {
+
+    },
+    "entityMap": {
+
+    }
+  }
+  

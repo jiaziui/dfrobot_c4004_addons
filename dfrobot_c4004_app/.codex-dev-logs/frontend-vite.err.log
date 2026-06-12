@@ -1,0 +1,96 @@
+[2m14:12:10[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/health[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:10[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/state?prefix=auto[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:10[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:10[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/health[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:10[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/state?prefix=auto[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:10[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/health[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/state?prefix=auto[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/health[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/state?prefix=auto[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:12:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:28:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:48:44[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:52:15[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m14:52:52[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:06:05[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:06:06[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:06:55[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:08:32[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:10:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:10:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:17:38[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:30:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:32:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:33:31[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:35:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:36:40[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:37:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:49:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m15:53:17[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)

@@ -1,0 +1,281 @@
+[2m10:10:59[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:14:01[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\frontend\src\App.tsx: Unexpected token, expected ":" (1476:19)
+
+[0m [90m 1474 |[31m                       [33m<[31m[33m/[31m[33mbutton[31m[33m>[31m
+ [90m 1475 |[31m                     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 1476 |[31m                   )}
+ [90m      |[31m                    [31m[1m^[22m[31m
+ [90m 1477 |[31m                 [33m<[31m[33m/[31m[33m>[31m
+ [90m 1478 |[31m               ) [33m:[31m [36mnull[31m}
+ [90m 1479 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/User/lj/DFRobot/Project/module/C4004/C4004/05_Software/home_assistant/dfrobot_c4004_addons/dfrobot_c4004_app/frontend/src/App.tsx[39m:1476:19
+[33m  1501|                          设置完成确认
+  1502|                        </button>
+  1503|                        <button
+     |                     ^
+  1504|                          type="button"
+  1505|                          className="range-tool-button"[39m
+      at constructor (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6616:19)
+      at TypeScriptParserMixin.unexpected (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6636:16)
+      at TypeScriptParserMixin.expect (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6916:12)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10909:12)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9620:18)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10902:17)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9803:20)
+      at TypeScriptParserMixin.parseExpressionBase (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10801:23)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10797:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseExpression (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10797:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4644:31)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4723:36)
+      at TypeScriptParserMixin.jsxParseElement (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4761:17)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4771:19)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11098:23)
+      at TypeScriptParserMixin.parseUpdate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11083:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11063:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9854:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10916:61)
+      at TypeScriptParserMixin.parseExprOps (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10921:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10898:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9792:39
+      at TypeScriptParserMixin.tryParse (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6924:20)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9792:18)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12510:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11692:28)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11348:23)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4776:20)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11098:23)
+      at TypeScriptParserMixin.parseUpdate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11083:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11063:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9854:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10916:61)
+      at TypeScriptParserMixin.parseExprOps (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10921:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10898:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9803:20)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:17)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10908:30)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9620:18)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10902:17)
+[2m10:14:01[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\frontend\src\App.tsx: Unexpected token, expected ":" (1476:19)
+
+[0m [90m 1474 |[31m                       [33m<[31m[33m/[31m[33mbutton[31m[33m>[31m
+ [90m 1475 |[31m                     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 1476 |[31m                   )}
+ [90m      |[31m                    [31m[1m^[22m[31m
+ [90m 1477 |[31m                 [33m<[31m[33m/[31m[33m>[31m
+ [90m 1478 |[31m               ) [33m:[31m [36mnull[31m}
+ [90m 1479 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/User/lj/DFRobot/Project/module/C4004/C4004/05_Software/home_assistant/dfrobot_c4004_addons/dfrobot_c4004_app/frontend/src/App.tsx[39m:1476:19
+[33m  1501|                          设置完成确认
+  1502|                        </button>
+  1503|                        <button
+     |                     ^
+  1504|                          type="button"
+  1505|                          className="range-tool-button"[39m
+      at constructor (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6616:19)
+      at TypeScriptParserMixin.unexpected (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6636:16)
+      at TypeScriptParserMixin.expect (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6916:12)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10909:12)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9620:18)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10902:17)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9803:20)
+      at TypeScriptParserMixin.parseExpressionBase (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10801:23)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10797:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseExpression (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10797:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4644:31)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4723:36)
+      at TypeScriptParserMixin.jsxParseElement (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4761:17)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4771:19)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11098:23)
+      at TypeScriptParserMixin.parseUpdate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11083:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11063:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9854:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10916:61)
+      at TypeScriptParserMixin.parseExprOps (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10921:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10898:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9792:39
+      at TypeScriptParserMixin.tryParse (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6924:20)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9792:18)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12510:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11692:28)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11348:23)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4776:20)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11098:23)
+      at TypeScriptParserMixin.parseUpdate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11083:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11063:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9854:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10916:61)
+      at TypeScriptParserMixin.parseExprOps (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10921:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10898:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9803:20)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:17)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10908:30)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9620:18)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10902:17)
+[2m10:14:01[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\frontend\src\App.tsx: Unexpected token, expected ":" (1476:19)
+
+[0m [90m 1474 |[31m                       [33m<[31m[33m/[31m[33mbutton[31m[33m>[31m
+ [90m 1475 |[31m                     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 1476 |[31m                   )}
+ [90m      |[31m                    [31m[1m^[22m[31m
+ [90m 1477 |[31m                 [33m<[31m[33m/[31m[33m>[31m
+ [90m 1478 |[31m               ) [33m:[31m [36mnull[31m}
+ [90m 1479 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/User/lj/DFRobot/Project/module/C4004/C4004/05_Software/home_assistant/dfrobot_c4004_addons/dfrobot_c4004_app/frontend/src/App.tsx[39m:1476:19
+[33m  1501|                          设置完成确认
+  1502|                        </button>
+  1503|                        <button
+     |                     ^
+  1504|                          type="button"
+  1505|                          className="range-tool-button"[39m
+      at constructor (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6616:19)
+      at TypeScriptParserMixin.unexpected (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6636:16)
+      at TypeScriptParserMixin.expect (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6916:12)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10909:12)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9620:18)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10902:17)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9803:20)
+      at TypeScriptParserMixin.parseExpressionBase (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10801:23)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10797:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseExpression (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10797:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4644:31)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4723:36)
+      at TypeScriptParserMixin.jsxParseElement (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4761:17)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4771:19)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11098:23)
+      at TypeScriptParserMixin.parseUpdate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11083:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11063:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9854:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10916:61)
+      at TypeScriptParserMixin.parseExprOps (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10921:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10898:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9792:39
+      at TypeScriptParserMixin.tryParse (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6924:20)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9792:18)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12510:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11692:28)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11348:23)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4776:20)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11098:23)
+      at TypeScriptParserMixin.parseUpdate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11083:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11063:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9854:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10916:61)
+      at TypeScriptParserMixin.parseExprOps (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10921:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10898:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9803:20)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:17)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10908:30)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9620:18)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10902:17)
+[2m10:14:01[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\frontend\src\App.tsx: Unexpected token, expected ":" (1476:19)
+
+[0m [90m 1474 |[31m                       [33m<[31m[33m/[31m[33mbutton[31m[33m>[31m
+ [90m 1475 |[31m                     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 1476 |[31m                   )}
+ [90m      |[31m                    [31m[1m^[22m[31m
+ [90m 1477 |[31m                 [33m<[31m[33m/[31m[33m>[31m
+ [90m 1478 |[31m               ) [33m:[31m [36mnull[31m}
+ [90m 1479 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/User/lj/DFRobot/Project/module/C4004/C4004/05_Software/home_assistant/dfrobot_c4004_addons/dfrobot_c4004_app/frontend/src/App.tsx[39m:1476:19
+[33m  1501|                          设置完成确认
+  1502|                        </button>
+  1503|                        <button
+     |                     ^
+  1504|                          type="button"
+  1505|                          className="range-tool-button"[39m
+      at constructor (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6616:19)
+      at TypeScriptParserMixin.unexpected (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6636:16)
+      at TypeScriptParserMixin.expect (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6916:12)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10909:12)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9620:18)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10902:17)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9803:20)
+      at TypeScriptParserMixin.parseExpressionBase (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10801:23)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10797:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseExpression (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10797:17)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4644:31)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4723:36)
+      at TypeScriptParserMixin.jsxParseElement (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4761:17)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4771:19)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11098:23)
+      at TypeScriptParserMixin.parseUpdate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11083:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11063:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9854:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10916:61)
+      at TypeScriptParserMixin.parseExprOps (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10921:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10898:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9792:39
+      at TypeScriptParserMixin.tryParse (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:6924:20)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9792:18)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12510:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11692:28)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11348:23)
+      at TypeScriptParserMixin.parseExprAtom (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:4776:20)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11098:23)
+      at TypeScriptParserMixin.parseUpdate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11083:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:11063:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9854:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10916:61)
+      at TypeScriptParserMixin.parseExprOps (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10921:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10898:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10848:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9803:20)
+      at D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:39
+      at TypeScriptParserMixin.allowInAnd (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:12443:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10817:17)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10908:30)
+      at TypeScriptParserMixin.parseConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:9620:18)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\node_modules\@babel\parser\lib\index.js:10902:17)
+[2m10:48:05[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/c4004/discover[39m
+Error: connect ECONNREFUSED 127.0.0.1:42069
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+npm error Lifecycle script `dev` failed with error:
+npm error code 4294967295
+npm error path D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\frontend
+npm error workspace dfrobot-c4004-frontend@0.1.0
+npm error location D:\User\lj\DFRobot\Project\module\C4004\C4004\05_Software\home_assistant\dfrobot_c4004_addons\dfrobot_c4004_app\frontend
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c vite --host 0.0.0.0 --strictPort

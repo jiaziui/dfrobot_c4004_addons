@@ -1,5 +1,3 @@
 #!/usr/bin/with-contenv bashio
 
-echo "Hello world!"
-
-python3 -m http.server 8000
+exec node /app/backend/dist/index.js

@@ -1,0 +1,2935 @@
+﻿import { type PointerEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type DiscoveryCandidate, discoverC4004Entities } from "./api";
+
+type Page = "management" | "config" | "detail";
+type ScanState = "idle" | "scanning" | "done" | "error";
+type ConfigStepId = "bind" | "basic" | "feature" | "range" | "tags" | "complete";
+type DetailConfigView = "none" | "range" | "tags" | "params";
+
+type ManagedDevice = {
+  id: string;
+  name: string;
+  model: string;
+  prefix: string;
+  status: "online" | "pending";
+  signal: number;
+  entityCount: number;
+  deviceIndex: number;
+  macAddress: string;
+  bound: boolean;
+  initialized: boolean;
+  lastSeen: string;
+  entities: DiscoveryCandidate["entities"];
+};
+
+type TrackingZoneShape = "rect" | "circle";
+type TrackingZoneField = "xMin" | "xMax" | "yMin" | "yMax" | "centerX" | "centerY" | "radius";
+type TagType = "none" | "boundary" | "approach" | "state" | "noise";
+type TagRangeShape = "circle" | "rect";
+type TagRegionField = "name" | "tagType" | "rangeShape" | "index" | "ioIndex" | "xSizeCm" | "ySizeCm";
+type TrackingZone = {
+  id: number;
+  name: string;
+  occupied: boolean;
+  shape: TrackingZoneShape;
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  centerX: number;
+  centerY: number;
+  radius: number;
+};
+type TagRegion = {
+  id: number;
+  name: string;
+  tagType: TagType;
+  rangeShape: TagRangeShape;
+  index: number;
+  ioIndex: number;
+  xSizeCm: number;
+  ySizeCm: number;
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+};
+
+type RangeField = "xMin" | "xMax" | "yMin" | "yMax";
+type RangeMode = "rect" | "learned" | "custom";
+type RangeSketchPoint = { x: number; y: number };
+
+const rangePreviewWidth = 1000;
+const rangePreviewHeight = 900;
+const rangePreviewPadding = { top: 34, right: 34, bottom: 64, left: 66 };
+const rangePreviewXMinM = -5;
+const rangePreviewXMaxM = 5;
+const rangePreviewYMinM = 0;
+const rangePreviewYMaxM = 9;
+const rangePreviewGridM = 1;
+const rangePreviewViewBoxWidth = rangePreviewWidth + rangePreviewPadding.left + rangePreviewPadding.right;
+const rangePreviewViewBoxHeight = rangePreviewHeight + rangePreviewPadding.top + rangePreviewPadding.bottom;
+const rangeSketchMinDistanceM = 0.04;
+const rangeConfigFields: Array<{ field: RangeField; label: string }> = [
+  { field: "xMin", label: "X Min(cm)" },
+  { field: "xMax", label: "X Max(cm)" },
+  { field: "yMin", label: "Y Min(cm)" },
+  { field: "yMax", label: "Y Max(cm)" },
+];
+const learnedRangePoints: RangeSketchPoint[] = [
+  { x: -2.2, y: 0.8 },
+  { x: 2.1, y: 1 },
+  { x: 2.4, y: 6.7 },
+  { x: -1.9, y: 6.9 },
+];
+const tagNameOptions = Array.from({ length: 8 }, (_, index) => `鏍囩${index + 1}`);
+const tagTypeOptions: Array<{ value: TagType; label: string }> = [
+  { value: "none", label: "鏃? },
+  { value: "boundary", label: "杈圭晫" },
+  { value: "approach", label: "闈犺繎杩滅绫? },
+  { value: "state", label: "鐘舵€佺被" },
+  { value: "noise", label: "鍣偣绫? },
+];
+const tagRangeShapeOptions: Array<{ value: TagRangeShape; label: string }> = [
+  { value: "circle", label: "鍦? },
+  { value: "rect", label: "鐭╁舰" },
+];
+const tagIndexMin = 2;
+const tagIndexMax = 6;
+
+const statusText: Record<ScanState, string> = {
+  idle: "寰呮壂鎻?,
+  scanning: "鎵弿涓?,
+  done: "宸插畬鎴?,
+  error: "鎵弿澶辫触",
+};
+
+const configSteps: Array<{ id: ConfigStepId; title: string; subtitle: string }> = [
+  { id: "bind", title: "缁戝畾璁惧", subtitle: "纭璁惧 / 寤虹珛缁戝畾" },
+  { id: "basic", title: "鍩虹淇℃伅閰嶇疆", subtitle: "瀹夎妯″紡 / 楂樺害 / 瑙掑害" },
+  { id: "feature", title: "鍔熻兘浣胯兘閰嶇疆", subtitle: "浜烘暟缁熻 / 杞ㄨ抗 LED / 杩愬姩 LED" },
+  { id: "range", title: "鎺㈡祴鑼冨洿閰嶇疆", subtitle: "鍧愭爣杞?/ 鍥涙柟鑼冨洿 / 杞ㄨ抗瀛︿範" },
+  { id: "tags", title: "鏍囩閰嶇疆", subtitle: "GPIO / 鍖哄煙鏍囩 / 澶氬尯鍩熺粦瀹? },
+  { id: "complete", title: "閰嶇疆瀹屾垚", subtitle: "璺宠浆鍒拌澶囪鎯呮樉绀虹晫闈? },
+];
+
+const trackingCanvasWidth = 1000;
+const trackingCanvasHeight = 800;
+const trackingCanvasPadding = 36;
+const trackingXMinMm = -5000;
+const trackingXMaxMm = 5000;
+const trackingYMinMm = 0;
+const trackingYMaxMm = 8000;
+const trackingGridMm = 1000;
+const trackingXRangeMm = trackingXMaxMm - trackingXMinMm;
+const trackingYRangeMm = trackingYMaxMm - trackingYMinMm;
+
+const toTrackingCanvasX = (value: number) => ((value - trackingXMinMm) / trackingXRangeMm) * trackingCanvasWidth;
+const toTrackingCanvasY = (value: number) => ((trackingYMaxMm - value) / trackingYRangeMm) * trackingCanvasHeight;
+const toTrackingCanvasCoord = (point: { x: number; y: number }) => ({
+  x: toTrackingCanvasX(point.x),
+  y: toTrackingCanvasY(point.y),
+});
+
+const clampRangePreviewValue = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const toRangePreviewX = (value: number) =>
+  ((value - rangePreviewXMinM) / (rangePreviewXMaxM - rangePreviewXMinM)) * rangePreviewWidth;
+const toRangePreviewY = (value: number) =>
+  rangePreviewHeight - ((value - rangePreviewYMinM) / (rangePreviewYMaxM - rangePreviewYMinM)) * rangePreviewHeight;
+const toRangePreviewPoint = (point: { x: number; y: number }) => ({
+  x: toRangePreviewX(point.x),
+  y: toRangePreviewY(point.y),
+});
+const formatRangeSketchPoints = (points: Array<{ x: number; y: number }>) =>
+  points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+const roundRangeSketchValue = (value: number) => Math.round(value * 100) / 100;
+
+const initialTrackingZones: TrackingZone[] = [
+  {
+    id: 1,
+    name: "Zone 1",
+    occupied: true,
+    shape: "rect",
+    xMin: -4700,
+    xMax: -2500,
+    yMin: 5200,
+    yMax: 7600,
+    centerX: -3600,
+    centerY: 6400,
+    radius: 900,
+  },
+  {
+    id: 2,
+    name: "Zone 2",
+    occupied: false,
+    shape: "circle",
+    xMin: -1900,
+    xMax: 300,
+    yMin: 5000,
+    yMax: 7200,
+    centerX: -800,
+    centerY: 6100,
+    radius: 1050,
+  },
+  {
+    id: 3,
+    name: "Zone 3",
+    occupied: true,
+    shape: "rect",
+    xMin: 2000,
+    xMax: 4550,
+    yMin: 4800,
+    yMax: 7200,
+    centerX: 3275,
+    centerY: 6000,
+    radius: 1000,
+  },
+  {
+    id: 4,
+    name: "Zone 4",
+    occupied: false,
+    shape: "circle",
+    xMin: -4300,
+    xMax: -2100,
+    yMin: 1300,
+    yMax: 3500,
+    centerX: -3200,
+    centerY: 2400,
+    radius: 1100,
+  },
+  {
+    id: 5,
+    name: "Zone 5",
+    occupied: false,
+    shape: "rect",
+    xMin: -950,
+    xMax: 1450,
+    yMin: 700,
+    yMax: 2850,
+    centerX: 250,
+    centerY: 1775,
+    radius: 900,
+  },
+  {
+    id: 6,
+    name: "Zone 6",
+    occupied: true,
+    shape: "circle",
+    xMin: 2250,
+    xMax: 4550,
+    yMin: 1400,
+    yMax: 3700,
+    centerX: 3400,
+    centerY: 2550,
+    radius: 1150,
+  },
+];
+
+const initialTagRegions: TagRegion[] = [
+  {
+    id: 1,
+    name: "鏍囩1",
+    tagType: "none",
+    rangeShape: "circle",
+    index: 2,
+    ioIndex: 2,
+    xSizeCm: 80,
+    ySizeCm: 0,
+    xMin: -1.6,
+    xMax: 0,
+    yMin: 1.0,
+    yMax: 2.6,
+  },
+  {
+    id: 2,
+    name: "鏍囩2",
+    tagType: "boundary",
+    rangeShape: "rect",
+    index: 3,
+    ioIndex: 3,
+    xSizeCm: 160,
+    ySizeCm: 220,
+    xMin: 0.2,
+    xMax: 1.8,
+    yMin: 1.2,
+    yMax: 3.4,
+  },
+];
+
+const trackingTargets = [
+  { index: 1, id: "T01", active: true, kinesia: 68, feature: "Human", x: 1.42, y: 2.18 },
+  { index: 2, id: "T02", active: true, kinesia: 12, feature: "Human", x: -0.74, y: 1.35 },
+  { index: 3, id: "T03", active: true, kinesia: 84, feature: "Human", x: 2.36, y: 4.64 },
+  { index: 4, id: "T04", active: true, kinesia: 25, feature: "Presence", x: -1.18, y: 6.72 },
+  { index: 5, id: null, active: false, kinesia: null, feature: null, x: null, y: null },
+  { index: 6, id: null, active: false, kinesia: null, feature: null, x: null, y: null },
+  { index: 7, id: null, active: false, kinesia: null, feature: null, x: null, y: null },
+  { index: 8, id: null, active: false, kinesia: null, feature: null, x: null, y: null },
+];
+
+const trajectoryPointsMeters = [
+  { x: -1.95, y: 1.2 },
+  { x: -1.38, y: 1.8 },
+  { x: -0.82, y: 2.5 },
+  { x: -0.18, y: 3.2 },
+  { x: 0.72, y: 4.0 },
+  { x: 1.62, y: 4.8 },
+  { x: 2.36, y: 5.6 },
+];
+
+const mockDeviceEntities: DiscoveryCandidate["entities"] = [
+  { key: "online", label: "Online", entityId: "binary_sensor.mock_c4004_online", state: "on" },
+  { key: "presence", label: "Presence", entityId: "binary_sensor.mock_c4004_presence", state: "on" },
+  { key: "peopleCount", label: "People Count", entityId: "sensor.mock_c4004_people_count", state: "4" },
+  { key: "targetCount", label: "Target Count", entityId: "sensor.mock_c4004_target_count", state: "4" },
+  { key: "motionState", label: "Motion State", entityId: "sensor.mock_c4004_motion_state", state: "active" },
+  { key: "rangeMode", label: "Range Mode", entityId: "select.mock_c4004_detection_range_mode", state: "standard" },
+];
+
+const mockDevice: ManagedDevice = {
+  id: "mock-c4004-01",
+  name: "C4004 寮€鍙戞牱鏈?,
+  model: "DFRobot C4004",
+  prefix: "mock_c4004",
+  status: "online",
+  signal: 92,
+  entityCount: mockDeviceEntities.length,
+  deviceIndex: 1,
+  macAddress: "A4:C1:38:4B:10:01",
+  bound: false,
+  initialized: false,
+  lastSeen: "鍒氬垰",
+  entities: mockDeviceEntities,
+};
+
+const mockDeviceSecondary: ManagedDevice = {
+  id: "mock-c4004-02",
+  name: "C4004 寮€鍙戞牱鏈?2",
+  model: "DFRobot C4004",
+  prefix: "mock_c4004_2",
+  status: "online",
+  signal: 84,
+  entityCount: mockDeviceEntities.length,
+  deviceIndex: 2,
+  macAddress: "A4:C1:38:4B:10:02",
+  bound: false,
+  initialized: false,
+  lastSeen: "鍒氬垰",
+  entities: mockDeviceEntities.map((entity) => ({
+    ...entity,
+    entityId: entity.entityId.replace("mock_c4004", "mock_c4004_2"),
+  })),
+};
+
+const mockScanDevices = [mockDevice, mockDeviceSecondary];
+
+const copyInitialTrackingZones = () => initialTrackingZones.map((zone) => ({ ...zone }));
+const copyInitialTagRegions = () => initialTagRegions.map((region) => ({ ...region }));
+
+const clampTagSizeCm = (value: number) => Math.min(1000, Math.max(1, value));
+const clampTagIndex = (value: number) => Math.min(tagIndexMax, Math.max(tagIndexMin, Math.round(value)));
+
+const syncTagRegionGeometry = (region: TagRegion): TagRegion => {
+  const centerX = (region.xMin + region.xMax) / 2;
+  const centerY = (region.yMin + region.yMax) / 2;
+
+  if (region.rangeShape === "circle") {
+    const radiusM = clampTagSizeCm(region.xSizeCm) / 100;
+    return {
+      ...region,
+      xSizeCm: clampTagSizeCm(region.xSizeCm),
+      xMin: centerX - radiusM,
+      xMax: centerX + radiusM,
+      yMin: centerY - radiusM,
+      yMax: centerY + radiusM,
+    };
+  }
+
+  const halfWidthM = clampTagSizeCm(region.xSizeCm) / 200;
+  const halfHeightM = clampTagSizeCm(region.ySizeCm) / 200;
+  return {
+    ...region,
+    xSizeCm: clampTagSizeCm(region.xSizeCm),
+    ySizeCm: clampTagSizeCm(region.ySizeCm),
+    xMin: centerX - halfWidthM,
+    xMax: centerX + halfWidthM,
+    yMin: centerY - halfHeightM,
+    yMax: centerY + halfHeightM,
+  };
+};
+
+const clampTrackingField = (field: TrackingZoneField, value: number) => {
+  if (field === "radius") {
+    return Math.min(5000, Math.max(100, value));
+  }
+
+  const min = field.toLowerCase().includes("x") ? trackingXMinMm : trackingYMinMm;
+  const max = field.toLowerCase().includes("x") ? trackingXMaxMm : trackingYMaxMm;
+  return Math.min(max, Math.max(min, value));
+};
+
+const toMetersValue = (value: number) => Number((value / 1000).toFixed(2));
+
+const toDevice = (candidate: DiscoveryCandidate, index: number): ManagedDevice => {
+  const displayPrefix = candidate.prefix || "auto";
+
+  return {
+    id: `${displayPrefix}-${index}`,
+    name: `C4004 璁惧 ${index + 1}`,
+    model: "DFRobot C4004",
+    prefix: displayPrefix,
+    status: "online",
+    signal: Math.min(98, 64 + candidate.score * 4),
+    entityCount: candidate.entities.length,
+    deviceIndex: index + 1,
+    macAddress: `A4:C1:38:4B:20:${String(index + 1).padStart(2, "0")}`,
+    bound: false,
+    initialized: false,
+    lastSeen: "鍒氬垰",
+    entities: candidate.entities,
+  };
+};
+
+function App() {
+  const [page, setPage] = useState<Page>("management");
+  const [scanState, setScanState] = useState<ScanState>("done");
+  const [devices, setDevices] = useState<ManagedDevice[]>([mockDevice]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(mockDevice.id);
+  const [activeStep, setActiveStep] = useState<ConfigStepId>("bind");
+  const [detailConfigView, setDetailConfigView] = useState<DetailConfigView>("none");
+  const [mountHeightCm, setMountHeightCm] = useState("180");
+  const [presenceEnabled, setPresenceEnabled] = useState(true);
+  const [trackingEnabled, setTrackingEnabled] = useState(true);
+  const [realTimePeopleTime, setRealTimePeopleTime] = useState("3");
+  const [trackMeters, setTrackMeters] = useState("0.35");
+  const [trackExistsTime, setTrackExistsTime] = useState("8");
+  const [unmannedTime, setUnmannedTime] = useState("30");
+  const [trackLedEnabled, setTrackLedEnabled] = useState(true);
+  const [motionLedEnabled, setMotionLedEnabled] = useState(true);
+  const [trackLearningEnabled, setTrackLearningEnabled] = useState(false);
+  const [rangeMode, setRangeMode] = useState<RangeMode>("rect");
+  const [customRangePoints, setCustomRangePoints] = useState<RangeSketchPoint[]>([]);
+  const [customRangePreviewPoint, setCustomRangePreviewPoint] = useState<RangeSketchPoint | null>(null);
+  const [customRangeConfirmed, setCustomRangeConfirmed] = useState(false);
+  const rangeChartRef = useRef<SVGSVGElement | null>(null);
+  const [rangeConfig, setRangeConfig] = useState({ xMin: -200, xMax: 200, yMin: 0, yMax: 700 });
+  const [trackingZones, setTrackingZones] = useState<TrackingZone[]>(copyInitialTrackingZones);
+  const [tagRegions, setTagRegions] = useState<TagRegion[]>(copyInitialTagRegions);
+  const [selectedTagRegionId, setSelectedTagRegionId] = useState<number | null>(initialTagRegions[0]?.id ?? null);
+  const [deviceIndexDrafts, setDeviceIndexDrafts] = useState<Record<string, string>>({});
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const selectedDevice = useMemo(
+    () => devices.find((device) => device.id === selectedDeviceId) ?? null,
+    [devices, selectedDeviceId],
+  );
+  const boundDevices = useMemo(() => devices.filter((device) => device.bound), [devices]);
+  const selectedTagRegion = useMemo(
+    () => tagRegions.find((region) => region.id === selectedTagRegionId) ?? tagRegions[0] ?? null,
+    [selectedTagRegionId, tagRegions],
+  );
+  const activeStepIndex = Math.max(
+    configSteps.findIndex((step) => step.id === activeStep),
+    0,
+  );
+  const previousConfigStep = configSteps[activeStepIndex - 1] ?? null;
+  const nextConfigStep = configSteps[activeStepIndex + 1] ?? null;
+
+  useEffect(() => {
+    if (rangeMode !== "custom" || customRangeConfirmed || !customRangePreviewPoint) {
+      return undefined;
+    }
+
+    const clearPreviewWhenOutsideChart = (event: globalThis.PointerEvent) => {
+      const rect = rangeChartRef.current?.getBoundingClientRect();
+      if (!rect?.width || !rect.height) {
+        return;
+      }
+
+      const viewX = ((event.clientX - rect.left) / rect.width) * rangePreviewViewBoxWidth;
+      const viewY = ((event.clientY - rect.top) / rect.height) * rangePreviewViewBoxHeight;
+      const chartX = viewX - rangePreviewPadding.left;
+      const chartY = viewY - rangePreviewPadding.top;
+      if (chartX < 0 || chartX > rangePreviewWidth || chartY < 0 || chartY > rangePreviewHeight) {
+        setCustomRangePreviewPoint(null);
+      }
+    };
+
+    window.addEventListener("pointermove", clearPreviewWhenOutsideChart);
+    return () => window.removeEventListener("pointermove", clearPreviewWhenOutsideChart);
+  }, [customRangeConfirmed, customRangePreviewPoint, rangeMode]);
+
+  useEffect(() => {
+    if (!tagRegions.length) {
+      setSelectedTagRegionId(null);
+      return;
+    }
+
+    if (!tagRegions.some((region) => region.id === selectedTagRegionId)) {
+      setSelectedTagRegionId(tagRegions[0].id);
+    }
+  }, [selectedTagRegionId, tagRegions]);
+
+  const scanDevices = async () => {
+    try {
+      setScanState("scanning");
+      setMessage(null);
+      setError(null);
+
+      const discovery = await discoverC4004Entities();
+      if (!discovery.ok) {
+        throw new Error(discovery.error ?? "璁惧鎵弿澶辫触");
+      }
+
+      const nextDevices = discovery.candidates.length ? discovery.candidates.map(toDevice) : mockScanDevices;
+      setDevices(nextDevices);
+      setSelectedDeviceId(nextDevices[0]?.id ?? null);
+      setScanState("done");
+      setMessage(
+        discovery.candidates.length ? `鎵弿瀹屾垚锛屽彂鐜?${nextDevices.length} 涓澶嘸 : "鏈壂鎻忓埌鐪熷疄璁惧锛屾樉绀?2 涓紑鍙戝亣璁惧",
+      );
+    } catch (err) {
+      setDevices(mockScanDevices);
+      setSelectedDeviceId(mockDevice.id);
+      setScanState("error");
+      setError(err instanceof Error ? `鐪熷疄鎵弿澶辫触锛屽凡鏄剧ず 2 涓紑鍙戝亣璁惧锛?{err.message}` : "璁惧鎵弿澶辫触");
+    }
+  };
+
+  const bindDevice = (device: ManagedDevice) => {
+    setSelectedDeviceId(device.id);
+    setDevices((prev) =>
+      prev.map((item) => (item.id === device.id ? { ...item, bound: true, status: "online" } : item)),
+    );
+    setMessage(`${device.name} 宸茬粦瀹歚);
+    setError(null);
+  };
+
+  const updateDeviceIndex = (deviceId: string, value: string) => {
+    setDeviceIndexDrafts((prev) => ({ ...prev, [deviceId]: value }));
+
+    if (value.trim() === "") {
+      return;
+    }
+
+    const nextIndex = Number(value);
+    if (!Number.isInteger(nextIndex) || nextIndex < 1 || nextIndex > 255) {
+      return;
+    }
+
+    setDevices((prev) =>
+      prev.map((item) => (item.id === deviceId ? { ...item, deviceIndex: nextIndex } : item)),
+    );
+  };
+
+  const completeInitialization = () => {
+    if (!selectedDevice) {
+      return;
+    }
+
+    setDevices((prev) =>
+      prev.map((item) =>
+        item.id === selectedDevice.id ? { ...item, bound: true, initialized: true, status: "online" } : item,
+      ),
+    );
+    setMessage(`${selectedDevice.name} 宸插畬鎴愰娆″垵濮嬪寲`);
+    setError(null);
+    setPage("detail");
+  };
+
+  const enterDeviceConfig = (device: ManagedDevice) => {
+    setSelectedDeviceId(device.id);
+    setDetailConfigView("none");
+    setPage("config");
+    setActiveStep("bind");
+    setMessage(null);
+    setError(null);
+  };
+
+  const enterDeviceDetail = (device: ManagedDevice) => {
+    setSelectedDeviceId(device.id);
+    if (!device.initialized) {
+      setPage("config");
+      setActiveStep("bind");
+      setMessage(`${device.name} 鏈繘琛岀涓€娆″垵濮嬪寲锛岃鍏堝畬鎴愬垵濮嬪寲娴佺▼`);
+      setError(null);
+      return;
+    }
+
+    setPage("detail");
+    setDetailConfigView("none");
+    setMessage(null);
+    setError(null);
+  };
+
+  const openSelectedDeviceDetail = () => {
+    if (selectedDevice) {
+      enterDeviceDetail(selectedDevice);
+      return;
+    }
+
+    setPage("detail");
+  };
+
+  const openConfigStep = (step: ConfigStepId) => {
+    setDetailConfigView("none");
+    setActiveStep(step);
+    setPage("config");
+    setMessage(null);
+    setError(null);
+  };
+
+  const openDetailConfigView = (view: Exclude<DetailConfigView, "none">) => {
+    setDetailConfigView(view);
+    setMessage(null);
+    setError(null);
+  };
+
+  const updateRangeConfig = (field: RangeField, value: string) => {
+    const nextValue = Number(value);
+    if (!Number.isFinite(nextValue)) {
+      return;
+    }
+    setRangeConfig((prev) => ({ ...prev, [field]: nextValue }));
+  };
+
+  const selectRangeMode = (mode: RangeMode) => {
+    setRangeMode(mode);
+    setCustomRangePreviewPoint(null);
+  };
+
+  const clearCustomRangePoints = () => {
+    setCustomRangePreviewPoint(null);
+    setCustomRangeConfirmed(false);
+    setCustomRangePoints([]);
+  };
+
+  const undoCustomRangePoint = () => {
+    if (customRangeConfirmed) {
+      return;
+    }
+
+    setCustomRangePreviewPoint(null);
+    setCustomRangePoints((prev) => prev.slice(0, -1));
+  };
+
+  const confirmCustomRange = () => {
+    if (customRangePoints.length < 3) {
+      return;
+    }
+
+    setCustomRangePreviewPoint(null);
+    setCustomRangeConfirmed(true);
+  };
+
+  const getRangeSketchPoint = (event: PointerEvent<SVGElement>): RangeSketchPoint | null => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      return null;
+    }
+
+    const viewX = ((event.clientX - rect.left) / rect.width) * rangePreviewViewBoxWidth;
+    const viewY = ((event.clientY - rect.top) / rect.height) * rangePreviewViewBoxHeight;
+    const chartX = viewX - rangePreviewPadding.left;
+    const chartY = viewY - rangePreviewPadding.top;
+    if (chartX < 0 || chartX > rangePreviewWidth || chartY < 0 || chartY > rangePreviewHeight) {
+      return null;
+    }
+
+    const x =
+      rangePreviewXMinM + (chartX / rangePreviewWidth) * (rangePreviewXMaxM - rangePreviewXMinM);
+    const y =
+      rangePreviewYMinM +
+      ((rangePreviewHeight - chartY) / rangePreviewHeight) * (rangePreviewYMaxM - rangePreviewYMinM);
+
+    return {
+      x: roundRangeSketchValue(x),
+      y: roundRangeSketchValue(y),
+    };
+  };
+
+  const handleCustomRangeCanvasClick = (event: PointerEvent<SVGElement>) => {
+    if (rangeMode !== "custom" || customRangeConfirmed) {
+      return;
+    }
+
+    const point = getRangeSketchPoint(event);
+    if (!point) {
+      setCustomRangePreviewPoint(null);
+      return;
+    }
+
+    event.preventDefault();
+
+    if (!customRangePoints.length) {
+      setCustomRangePoints([point]);
+      setCustomRangePreviewPoint(null);
+      return;
+    }
+
+    const startPoint = customRangePoints[customRangePoints.length - 1];
+    if (Math.hypot(point.x - startPoint.x, point.y - startPoint.y) < rangeSketchMinDistanceM) {
+      return;
+    }
+
+    setCustomRangePreviewPoint(null);
+    setCustomRangePoints((prev) => [...prev, point]);
+  };
+
+  const previewCustomRangeLine = (event: PointerEvent<SVGElement>) => {
+    if (rangeMode !== "custom" || customRangeConfirmed || !customRangePoints.length) {
+      return;
+    }
+
+    const point = getRangeSketchPoint(event);
+    if (!point) {
+      return;
+    }
+
+    setCustomRangePreviewPoint(point);
+  };
+
+  const stopCustomRangePreview = () => {
+    setCustomRangePreviewPoint(null);
+  };
+
+  const updateTagRegion = (id: number, field: TagRegionField, value: string) => {
+    setTagRegions((prev) =>
+      prev.map((region) => {
+        if (region.id !== id) {
+          return region;
+        }
+
+        if (field === "name") {
+          return { ...region, name: value };
+        }
+
+        if (field === "tagType") {
+          return { ...region, tagType: value as TagType };
+        }
+
+        if (field === "rangeShape") {
+          const nextShape = value as TagRangeShape;
+          const nextRegion =
+            nextShape === "circle"
+              ? {
+                  ...region,
+                  rangeShape: nextShape,
+                  xSizeCm: Math.max(1, Math.round(Math.max(region.xSizeCm, region.ySizeCm) / 2)),
+                }
+              : {
+                  ...region,
+                  rangeShape: nextShape,
+                  ySizeCm: region.ySizeCm > 0 ? region.ySizeCm : region.xSizeCm,
+                };
+          return syncTagRegionGeometry(nextRegion);
+        }
+
+        const nextValue = Number(value);
+        if (!Number.isFinite(nextValue)) {
+          return region;
+        }
+
+        if (field === "index" || field === "ioIndex") {
+          return { ...region, [field]: clampTagIndex(nextValue) };
+        }
+
+        if (field === "xSizeCm" || field === "ySizeCm") {
+          return syncTagRegionGeometry({ ...region, [field]: clampTagSizeCm(nextValue) });
+        }
+
+        return region;
+      }),
+    );
+  };
+
+  const addTagRegion = () => {
+    setTagRegions((prev) => {
+      const nextIndex = prev.length
+        ? clampTagIndex(Math.max(...prev.map((region) => region.index)) + 1)
+        : tagIndexMin;
+      return [
+        ...prev,
+        {
+          id: Date.now(),
+          name: tagNameOptions[(nextIndex - 1) % tagNameOptions.length],
+          tagType: "none",
+          rangeShape: "rect",
+          index: nextIndex,
+          ioIndex: nextIndex,
+          xSizeCm: 160,
+          ySizeCm: 180,
+          xMin: -1,
+          xMax: 0.6,
+          yMin: 1,
+          yMax: 2.8,
+        },
+      ];
+    });
+  };
+
+  const removeTagRegion = (id: number) => {
+    setTagRegions((prev) => prev.filter((region) => region.id !== id));
+  };
+
+  const clearAllTagRegions = () => {
+    setTagRegions([]);
+  };
+
+  const updateTrackingZoneShape = (zoneId: number, shape: TrackingZoneShape) => {
+    setTrackingZones((prev) => prev.map((zone) => (zone.id === zoneId ? { ...zone, shape } : zone)));
+  };
+
+  const updateTrackingZoneField = (zoneId: number, field: TrackingZoneField, value: string) => {
+    if (value.trim() === "") {
+      return;
+    }
+
+    const nextValue = Number(value);
+    if (!Number.isFinite(nextValue)) {
+      return;
+    }
+
+    setTrackingZones((prev) =>
+      prev.map((zone) =>
+        zone.id === zoneId ? { ...zone, [field]: clampTrackingField(field, nextValue * 1000) } : zone,
+      ),
+    );
+  };
+
+  const goToPreviousConfigStep = () => {
+    if (previousConfigStep) {
+      setActiveStep(previousConfigStep.id);
+    }
+  };
+
+  const goToNextConfigStep = () => {
+    if (nextConfigStep) {
+      setActiveStep(nextConfigStep.id);
+    }
+  };
+
+  const renderStepNavigation = (leadingAction?: ReactNode, finalAction?: ReactNode) => (
+    <div className="flow-actions">
+      <div className="flow-actions-leading">{leadingAction}</div>
+      <div className="flow-actions-nav">
+        <button
+          type="button"
+          className="action-button"
+          disabled={!previousConfigStep}
+          onClick={goToPreviousConfigStep}
+        >
+          涓婁竴姝?        </button>
+        {nextConfigStep ? (
+          <button type="button" className="action-button action-primary" onClick={goToNextConfigStep}>
+            涓嬩竴姝ワ細{nextConfigStep.title}
+          </button>
+        ) : (
+          finalAction
+        )}
+      </div>
+    </div>
+  );
+
+  const renderTagCoordinatePreview = () => {
+    const rangeGridLines: ReactNode[] = [];
+    const rangeTickLabels: ReactNode[] = [];
+
+    for (let x = rangePreviewXMinM; x <= rangePreviewXMaxM; x += rangePreviewGridM) {
+      const xPos = toRangePreviewX(x);
+      rangeGridLines.push(
+        <line
+          className={x === 0 ? "range-chart-axis" : "range-chart-grid"}
+          key={`tag-range-x-${x}`}
+          x1={xPos}
+          x2={xPos}
+          y1={0}
+          y2={rangePreviewHeight}
+          vectorEffect="non-scaling-stroke"
+        />,
+      );
+      rangeTickLabels.push(
+        <text className="range-chart-label" key={`tag-range-x-label-${x}`} x={xPos} y={rangePreviewHeight + 30}>
+          {x}m
+        </text>,
+      );
+    }
+
+    for (let y = rangePreviewYMinM; y <= rangePreviewYMaxM; y += rangePreviewGridM) {
+      const yPos = toRangePreviewY(y);
+      rangeGridLines.push(
+        <line
+          className={y === 0 ? "range-chart-axis" : "range-chart-grid"}
+          key={`tag-range-y-${y}`}
+          x1={0}
+          x2={rangePreviewWidth}
+          y1={yPos}
+          y2={yPos}
+          vectorEffect="non-scaling-stroke"
+        />,
+      );
+      rangeTickLabels.push(
+        <text className="range-chart-label range-chart-y-label" key={`tag-range-y-label-${y}`} x={-14} y={yPos + 5}>
+          {y}m
+        </text>,
+      );
+    }
+
+    const rangeLeftInput = Math.min(rangeConfig.xMin, rangeConfig.xMax) / 100;
+    const rangeRightInput = Math.max(rangeConfig.xMin, rangeConfig.xMax) / 100;
+    const rangeBottomInput = Math.min(rangeConfig.yMin, rangeConfig.yMax) / 100;
+    const rangeTopInput = Math.max(rangeConfig.yMin, rangeConfig.yMax) / 100;
+    const rangeLeftM = clampRangePreviewValue(rangeLeftInput, rangePreviewXMinM, rangePreviewXMaxM);
+    const rangeRightM = clampRangePreviewValue(rangeRightInput, rangePreviewXMinM, rangePreviewXMaxM);
+    const rangeBottomM = clampRangePreviewValue(rangeBottomInput, rangePreviewYMinM, rangePreviewYMaxM);
+    const rangeTopM = clampRangePreviewValue(rangeTopInput, rangePreviewYMinM, rangePreviewYMaxM);
+    const rangeRectLeft = Math.min(toRangePreviewX(rangeLeftM), toRangePreviewX(rangeRightM));
+    const rangeRectRight = Math.max(toRangePreviewX(rangeLeftM), toRangePreviewX(rangeRightM));
+    const rangeRectTop = Math.min(toRangePreviewY(rangeTopM), toRangePreviewY(rangeBottomM));
+    const rangeRectBottom = Math.max(toRangePreviewY(rangeTopM), toRangePreviewY(rangeBottomM));
+    const customRangeChartPoints = customRangePoints.map(toRangePreviewPoint);
+    const learnedRangeChartPoints = learnedRangePoints.map(toRangePreviewPoint);
+
+    return (
+      <div className="range-preview tag-coordinate-preview">
+        <svg
+          className="range-chart"
+          viewBox={`0 0 ${rangePreviewViewBoxWidth} ${rangePreviewViewBoxHeight}`}
+          role="img"
+          aria-label="鏍囩鍖哄煙鍧愭爣閰嶇疆"
+        >
+          <g transform={`translate(${rangePreviewPadding.left}, ${rangePreviewPadding.top})`}>
+            <rect className="range-chart-background" x={0} y={0} width={rangePreviewWidth} height={rangePreviewHeight} />
+            {rangeGridLines}
+            {rangeMode === "rect" && (
+              <rect
+                className="range-detection-area"
+                x={rangeRectLeft}
+                y={rangeRectTop}
+                width={rangeRectRight - rangeRectLeft}
+                height={rangeRectBottom - rangeRectTop}
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+            {rangeMode === "learned" && learnedRangeChartPoints.length >= 3 && (
+              <polygon
+                className="range-learned-polygon"
+                points={formatRangeSketchPoints(learnedRangeChartPoints)}
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+            {rangeMode === "learned" && learnedRangeChartPoints.map((point, index) => (
+              <g className="range-learned-vertex" key={`tag-learned-${point.x}-${point.y}-${index}`}>
+                <circle cx={point.x} cy={point.y} r="10" vectorEffect="non-scaling-stroke" />
+              </g>
+            ))}
+            {rangeMode === "custom" && customRangeChartPoints.length >= 3 && (
+              <polygon
+                className="range-custom-polygon"
+                points={formatRangeSketchPoints(customRangeChartPoints)}
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+            {rangeMode === "custom" && customRangeChartPoints.length > 1 && (
+              <polyline
+                className="range-custom-line"
+                points={formatRangeSketchPoints(customRangeChartPoints)}
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+            {tagRegions.map((region) => {
+              const left = Math.min(toRangePreviewX(region.xMin), toRangePreviewX(region.xMax));
+              const right = Math.max(toRangePreviewX(region.xMin), toRangePreviewX(region.xMax));
+              const top = Math.min(toRangePreviewY(region.yMax), toRangePreviewY(region.yMin));
+              const bottom = Math.max(toRangePreviewY(region.yMax), toRangePreviewY(region.yMin));
+              const centerM = {
+                x: (region.xMin + region.xMax) / 2,
+                y: (region.yMin + region.yMax) / 2,
+              };
+              const centerX = (left + right) / 2;
+              const centerY = (top + bottom) / 2;
+              const circleRadius = Math.abs(toRangePreviewX(centerM.x + region.xSizeCm / 100) - toRangePreviewX(centerM.x));
+
+              return (
+                <g className="tag-region-shape" key={region.id}>
+                  {region.rangeShape === "circle" ? (
+                    <circle cx={centerX} cy={centerY} r={circleRadius} vectorEffect="non-scaling-stroke" />
+                  ) : (
+                    <rect
+                      x={left}
+                      y={top}
+                      width={right - left}
+                      height={bottom - top}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )}
+                  <text x={centerX} y={centerY - 4}>
+                    <tspan x={centerX}>{region.name}</tspan>
+                    <tspan x={centerX} dy="22">
+                      IDX {region.index}
+                    </tspan>
+                  </text>
+                </g>
+              );
+            })}
+            <g
+              aria-hidden="true"
+              className="range-radar-origin"
+              transform={`translate(${toRangePreviewX(0)}, ${toRangePreviewY(0)})`}
+            >
+              <path className="range-radar-wave" d="M -64 -24 Q 0 -88 64 -24" />
+              <path className="range-radar-wave" d="M -44 -16 Q 0 -58 44 -16" />
+              <path className="range-radar-wave" d="M -24 -9 Q 0 -32 24 -9" />
+              <circle className="range-radar-dot" cx="0" cy="0" r="8" />
+            </g>
+            {rangeTickLabels}
+            <text className="range-chart-axis-title" x={rangePreviewWidth + 22} y={rangePreviewHeight + 6}>
+              X
+            </text>
+            <text className="range-chart-axis-title" x={toRangePreviewX(0) + 14} y={-14}>
+              Y
+            </text>
+          </g>
+        </svg>
+      </div>
+    );
+  };
+
+  const renderSidebar = () => (
+    <aside className="sidebar">
+      <div className="brand">
+        <span className="brand-mark">C4</span>
+        <div>
+          <strong>DFRobot C4004</strong>
+          <small>姣背娉㈤浄杈炬帶鍒跺彴</small>
+        </div>
+      </div>
+
+      <nav className="side-nav" aria-label="涓诲鑸?>
+        <button
+          type="button"
+          className={page === "management" ? "nav-item nav-item-active" : "nav-item"}
+          onClick={() => setPage("management")}
+        >
+          璁惧绠＄悊
+        </button>
+        <button
+          type="button"
+          className={page === "detail" ? "nav-item nav-item-active" : "nav-item"}
+          onClick={openSelectedDeviceDetail}
+        >
+          璁惧璇︽儏灞曠ず
+        </button>
+      </nav>
+    </aside>
+  );
+
+  const renderTagRegionFieldGrid = (region: TagRegion) => (
+    <div className="tag-region-input-grid">
+      <label className="form-field">
+        <span>鏍囩鍚嶇О</span>
+        <select value={region.name} onChange={(event) => updateTagRegion(region.id, "name", event.target.value)}>
+          {tagNameOptions.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="form-field">
+        <span>鏍囩绫诲瀷</span>
+        <select value={region.tagType} onChange={(event) => updateTagRegion(region.id, "tagType", event.target.value)}>
+          {tagTypeOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="form-field">
+        <span>鑼冨洿绫诲瀷</span>
+        <select value={region.rangeShape} onChange={(event) => updateTagRegion(region.id, "rangeShape", event.target.value)}>
+          {tagRangeShapeOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="form-field">
+        <span>鏍囩绱㈠紩</span>
+        <input
+          type="number"
+          min={tagIndexMin}
+          max={tagIndexMax}
+          step="1"
+          value={region.index}
+          onChange={(event) => updateTagRegion(region.id, "index", event.target.value)}
+        />
+      </label>
+      <label className="form-field">
+        <span>IO 绱㈠紩</span>
+        <input
+          type="number"
+          min={tagIndexMin}
+          max={tagIndexMax}
+          step="1"
+          value={region.ioIndex}
+          onChange={(event) => updateTagRegion(region.id, "ioIndex", event.target.value)}
+        />
+      </label>
+      <label className="form-field">
+        <span>{region.rangeShape === "circle" ? "X 鍗婂緞(cm)" : "X 瀹?cm)"}</span>
+        <input
+          type="number"
+          step="1"
+          value={Math.round(region.xSizeCm)}
+          onChange={(event) => updateTagRegion(region.id, "xSizeCm", event.target.value)}
+        />
+      </label>
+      <label className={region.rangeShape === "circle" ? "form-field form-field-readonly" : "form-field"}>
+        <span>{region.rangeShape === "circle" ? "Y 楂?cm) 鏃犳晥" : "Y 楂?cm)"}</span>
+        <input
+          type="number"
+          step="1"
+          value={region.rangeShape === "circle" ? "" : Math.round(region.ySizeCm)}
+          placeholder={region.rangeShape === "circle" ? "鏃犳晥" : undefined}
+          disabled={region.rangeShape === "circle"}
+          onChange={(event) => updateTagRegion(region.id, "ySizeCm", event.target.value)}
+        />
+      </label>
+    </div>
+  );
+
+  const renderRangeConfigSection = (showPreview = true) => {
+    const rangeGridLines: ReactNode[] = [];
+    const rangeTickLabels: ReactNode[] = [];
+    const rangeLeftInput = Math.min(rangeConfig.xMin, rangeConfig.xMax) / 100;
+    const rangeRightInput = Math.max(rangeConfig.xMin, rangeConfig.xMax) / 100;
+    const rangeBottomInput = Math.min(rangeConfig.yMin, rangeConfig.yMax) / 100;
+    const rangeTopInput = Math.max(rangeConfig.yMin, rangeConfig.yMax) / 100;
+    const rangeWidthM = Math.max(rangeRightInput - rangeLeftInput, 0);
+    const rangeHeightM = Math.max(rangeTopInput - rangeBottomInput, 0);
+    const rangeSamplePoints = [
+      { x: rangeLeftInput + rangeWidthM * 0.28, y: rangeBottomInput + rangeHeightM * 0.72 },
+      { x: rangeLeftInput + rangeWidthM * 0.68, y: rangeBottomInput + rangeHeightM * 0.58 },
+      { x: rangeLeftInput + rangeWidthM * 0.46, y: rangeBottomInput + rangeHeightM * 0.28 },
+    ];
+
+    for (let x = rangePreviewXMinM; x <= rangePreviewXMaxM; x += rangePreviewGridM) {
+      const xPos = toRangePreviewX(x);
+      rangeGridLines.push(
+        <line
+          className={x === 0 ? "range-chart-axis" : "range-chart-grid"}
+          key={`range-x-${x}`}
+          x1={xPos}
+          x2={xPos}
+          y1={0}
+          y2={rangePreviewHeight}
+          vectorEffect="non-scaling-stroke"
+        />,
+      );
+      rangeTickLabels.push(
+        <text className="range-chart-label" key={`range-x-label-${x}`} x={xPos} y={rangePreviewHeight + 30}>
+          {x}m
+        </text>,
+      );
+    }
+
+    for (let y = rangePreviewYMinM; y <= rangePreviewYMaxM; y += rangePreviewGridM) {
+      const yPos = toRangePreviewY(y);
+      rangeGridLines.push(
+        <line
+          className={y === 0 ? "range-chart-axis" : "range-chart-grid"}
+          key={`range-y-${y}`}
+          x1={0}
+          x2={rangePreviewWidth}
+          y1={yPos}
+          y2={yPos}
+          vectorEffect="non-scaling-stroke"
+        />,
+      );
+      rangeTickLabels.push(
+        <text className="range-chart-label range-chart-y-label" key={`range-y-label-${y}`} x={-14} y={yPos + 5}>
+          {y}m
+        </text>,
+      );
+    }
+
+    const rangeLeftM = clampRangePreviewValue(rangeLeftInput, rangePreviewXMinM, rangePreviewXMaxM);
+    const rangeRightM = clampRangePreviewValue(rangeRightInput, rangePreviewXMinM, rangePreviewXMaxM);
+    const rangeBottomM = clampRangePreviewValue(rangeBottomInput, rangePreviewYMinM, rangePreviewYMaxM);
+    const rangeTopM = clampRangePreviewValue(rangeTopInput, rangePreviewYMinM, rangePreviewYMaxM);
+    const rangeRectLeft = Math.min(toRangePreviewX(rangeLeftM), toRangePreviewX(rangeRightM));
+    const rangeRectRight = Math.max(toRangePreviewX(rangeLeftM), toRangePreviewX(rangeRightM));
+    const rangeRectTop = Math.min(toRangePreviewY(rangeTopM), toRangePreviewY(rangeBottomM));
+    const rangeRectBottom = Math.max(toRangePreviewY(rangeTopM), toRangePreviewY(rangeBottomM));
+    const customRangeChartPoints = customRangePoints.map(toRangePreviewPoint);
+    const learnedRangeChartPoints = learnedRangePoints.map(toRangePreviewPoint);
+    const customRangePreviewChartPoints =
+      customRangePreviewPoint && customRangePoints.length
+        ? [customRangePoints[customRangePoints.length - 1], customRangePreviewPoint].map(toRangePreviewPoint)
+        : [];
+    const liveCustomRangeChartPoints =
+      !customRangeConfirmed && customRangePreviewPoint && customRangePoints.length >= 2
+        ? [...customRangePoints, customRangePreviewPoint].map(toRangePreviewPoint)
+        : !customRangeConfirmed && customRangePoints.length >= 3
+          ? customRangeChartPoints
+          : [];
+
+    return (
+      <div className="config-section">
+        <div className="section-title">
+          <h2>鎺㈡祴鑼冨洿閰嶇疆</h2>
+          <span>鍧愭爣杞淬€佸洓鏂硅寖鍥淬€佽建杩瑰涔犲拰鑷畾涔夋爣瀹氳寖鍥?/span>
+        </div>
+        <div className={showPreview ? "range-layout" : "range-layout range-layout-panel"}>
+          {showPreview ? (
+          <div className="range-preview">
+            <svg
+              ref={rangeChartRef}
+              className={rangeMode === "custom" && !customRangeConfirmed ? "range-chart range-chart-sketch-enabled" : "range-chart"}
+              viewBox={`0 0 ${rangePreviewViewBoxWidth} ${rangePreviewViewBoxHeight}`}
+              onPointerDown={handleCustomRangeCanvasClick}
+              onPointerMove={previewCustomRangeLine}
+              onPointerLeave={stopCustomRangePreview}
+              onMouseLeave={stopCustomRangePreview}
+              role="img"
+              aria-label="鎺㈡祴鑼冨洿鍧愭爣杞达紝X 杞翠粠 -5m 鍒?5m锛孻 杞翠粠 0m 鍒?9m"
+            >
+              <rect
+                className="range-chart-event-layer"
+                x={0}
+                y={0}
+                width={rangePreviewViewBoxWidth}
+                height={rangePreviewViewBoxHeight}
+                onPointerMove={previewCustomRangeLine}
+              />
+              <g transform={`translate(${rangePreviewPadding.left}, ${rangePreviewPadding.top})`}>
+                <rect className="range-chart-background" x={0} y={0} width={rangePreviewWidth} height={rangePreviewHeight} />
+                {rangeGridLines}
+                {rangeMode === "rect" ? (
+                  <rect
+                    className="range-detection-area"
+                    x={rangeRectLeft}
+                    y={rangeRectTop}
+                    width={rangeRectRight - rangeRectLeft}
+                    height={rangeRectBottom - rangeRectTop}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
+                {rangeSamplePoints.map((point, index) => {
+                  const previewPoint = toRangePreviewPoint({
+                    x: clampRangePreviewValue(point.x, rangePreviewXMinM, rangePreviewXMaxM),
+                    y: clampRangePreviewValue(point.y, rangePreviewYMinM, rangePreviewYMaxM),
+                  });
+                  return (
+                    <circle
+                      className="range-chart-dot"
+                      cx={previewPoint.x}
+                      cy={previewPoint.y}
+                      key={`${point.x}-${point.y}-${index}`}
+                      r="10"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  );
+                })}
+                {rangeMode === "learned" && learnedRangeChartPoints.length >= 3 ? (
+                  <polygon
+                    className="range-learned-polygon"
+                    points={formatRangeSketchPoints(learnedRangeChartPoints)}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
+                {rangeMode === "learned"
+                  ? learnedRangeChartPoints.map((point, index) => (
+                      <g className="range-learned-vertex" key={`learned-${point.x}-${point.y}-${index}`}>
+                        <circle cx={point.x} cy={point.y} r="10" vectorEffect="non-scaling-stroke" />
+                      </g>
+                    ))
+                  : null}
+                {rangeMode === "custom" && liveCustomRangeChartPoints.length >= 3 ? (
+                  <polygon
+                    className="range-custom-polygon-preview"
+                    points={formatRangeSketchPoints(liveCustomRangeChartPoints)}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
+                {rangeMode === "custom" && customRangeConfirmed && customRangeChartPoints.length >= 3 ? (
+                  <polygon
+                    className="range-custom-polygon"
+                    points={formatRangeSketchPoints(customRangeChartPoints)}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
+                {rangeMode === "custom" && customRangeChartPoints.length > 1 ? (
+                  <polyline
+                    className="range-custom-line"
+                    points={formatRangeSketchPoints(customRangeChartPoints)}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
+                {rangeMode === "custom" && customRangePreviewChartPoints.length > 1 ? (
+                  <polyline
+                    className="range-custom-line range-custom-line-draft"
+                    points={formatRangeSketchPoints(customRangePreviewChartPoints)}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
+                {rangeMode === "custom"
+                  ? customRangeChartPoints.map((point, index) => (
+                      <g className="range-custom-vertex" key={`${point.x}-${point.y}-${index}`}>
+                        <circle cx={point.x} cy={point.y} r="12" vectorEffect="non-scaling-stroke" />
+                        <text x={point.x} y={point.y + 4}>
+                          {index + 1}
+                        </text>
+                      </g>
+                    ))
+                  : null}
+                <g
+                  aria-hidden="true"
+                  className="range-radar-origin"
+                  transform={`translate(${toRangePreviewX(0)}, ${toRangePreviewY(0)})`}
+                >
+                  <path className="range-radar-wave" d="M -64 -24 Q 0 -88 64 -24" />
+                  <path className="range-radar-wave" d="M -44 -16 Q 0 -58 44 -16" />
+                  <path className="range-radar-wave" d="M -24 -9 Q 0 -32 24 -9" />
+                  <circle className="range-radar-dot" cx="0" cy="0" r="8" />
+                </g>
+                {rangeTickLabels}
+                <text className="range-chart-axis-title" x={rangePreviewWidth + 22} y={rangePreviewHeight + 6}>
+                  X
+                </text>
+                <text className="range-chart-axis-title" x={toRangePreviewX(0) + 14} y={-14}>
+                  Y
+                </text>
+              </g>
+            </svg>
+          </div>
+          ) : null}
+
+          <div className="range-controls">
+            {showPreview ? null : (
+              <div className="detail-inline-note">
+                <strong>涓棿涓诲潗鏍囧尯瀹炴椂鑱斿姩</strong>
+                <span>鍦ㄨ繖閲岃皟鏁磋寖鍥村弬鏁板悗锛屼腑澶潗鏍囪酱浼氬悓姝ユ洿鏂帮紝涓嶅啀閲嶅鏄剧ず绗簩濂楀潗鏍囩郴銆?/span>
+              </div>
+            )}
+            <div className="range-mode-selector" aria-label="鎺㈡祴鑼冨洿鏄剧ず妯″紡">
+              <button
+                type="button"
+                className={rangeMode === "rect" ? "range-mode-button range-mode-button-active" : "range-mode-button"}
+                onClick={() => selectRangeMode("rect")}
+              >
+                鍥涙柟鎺㈡祴鑼冨洿妯″紡
+              </button>
+              <button
+                type="button"
+                className={rangeMode === "learned" ? "range-mode-button range-mode-button-active" : "range-mode-button"}
+                onClick={() => selectRangeMode("learned")}
+              >
+                杞ㄨ抗鎺㈡祴鑼冨洿妯″紡
+              </button>
+              <button
+                type="button"
+                className={rangeMode === "custom" ? "range-mode-button range-mode-button-active" : "range-mode-button"}
+                onClick={() => selectRangeMode("custom")}
+              >
+                鑷畾涔夎建杩硅寖鍥存ā寮?              </button>
+            </div>
+
+            <div className="range-mode-panel">
+              {rangeMode === "rect" ? (
+                <div className="field-grid">
+                  {rangeConfigFields.map(({ field, label }) => (
+                    <label className="form-field" key={field}>
+                      <span>{label}</span>
+                      <input
+                        type="number"
+                        step="1"
+                        value={rangeConfig[field]}
+                        onChange={(event) => updateRangeConfig(field, event.target.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+
+              {rangeMode === "learned" ? (
+                <>
+                  <div className="feature-row">
+                    <div>
+                      <strong>寮€鍚?/ 鍏抽棴瀛︿範鎺㈡祴鑼冨洿寮€鍏?/strong>
+                      <span>鎵撳紑鍚庤澶囪繘鍏ヨ建杩瑰涔犳祦绋嬨€?/span>
+                    </div>
+                    <button
+                      type="button"
+                      className={trackLearningEnabled ? "switch switch-on" : "switch"}
+                      onClick={() => setTrackLearningEnabled((prev) => !prev)}
+                      aria-pressed={trackLearningEnabled}
+                    >
+                      <span />
+                    </button>
+                  </div>
+                  <div className="range-point-list range-learned-points">
+                    <strong>浼犳劅鍣ㄥ涔犺寖鍥寸偣浣?cm)</strong>
+                    <code>{JSON.stringify(learnedRangePoints.map((point) => [Math.round(point.x * 100), Math.round(point.y * 100)]))}</code>
+                  </div>
+                  <div className="feature-row">
+                    <div>
+                      <strong>璁剧疆鍚敤杞ㄨ抗鎺㈡祴鑼冨洿妯″紡</strong>
+                      <span>宸茶鍙栦紶鎰熷櫒瀛︿範鑼冨洿</span>
+                    </div>
+                    <span className="state-chip state-chip-on">杞ㄨ抗鎺㈡祴妯″紡</span>
+                  </div>
+                </>
+              ) : null}
+
+              {rangeMode === "custom" ? (
+                <>
+                  <div className="feature-row">
+                    <div>
+                      <strong>鑷畾涔夋爣瀹氳寖鍥存ā寮?/strong>
+                      <span>鑷畾涔夋爣瀹氱偣骞惰缃惎鐢ㄨ嚜瀹氫箟鎺㈡祴鑼冨洿銆?/span>
+                    </div>
+                    <span className="state-chip state-chip-on">褰撳墠妯″紡</span>
+                  </div>
+                  <div className="range-custom-toolbar">
+                    <span className={customRangePoints.length ? "state-chip state-chip-on" : "state-chip"}>
+                      {customRangeConfirmed
+                        ? `璁剧疆宸插畬鎴?${customRangePoints.length} 鐐筦
+                        : customRangePoints.length >= 3
+                          ? `涓存椂鑼冨洿 ${customRangePoints.length} 鐐癸紝纭鍓嶅彲缁х画娣诲姞`
+                          : customRangePoints.length
+                            ? `寰呴€夋嫨绗?${customRangePoints.length + 1} 鐐筦
+                            : "鐐瑰嚮鍧愭爣绯昏缃捣鐐?}
+                    </span>
+                    <div>
+                      <button
+                        type="button"
+                        className="range-tool-button range-tool-button-primary"
+                        disabled={customRangePoints.length < 3 || customRangeConfirmed}
+                        onClick={confirmCustomRange}
+                      >
+                        璁剧疆瀹屾垚纭
+                      </button>
+                      <button
+                        type="button"
+                        className="range-tool-button"
+                        disabled={!customRangePoints.length || customRangeConfirmed}
+                        onClick={undoCustomRangePoint}
+                      >
+                        鎾ら攢
+                      </button>
+                      <button
+                        type="button"
+                        className="range-tool-button"
+                        disabled={!customRangePoints.length}
+                        onClick={clearCustomRangePoints}
+                      >
+                        娓呴櫎
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderDetailTagConfigPanel = (showPreview = true) => (
+    <div className="config-section">
+      <div className="section-title">
+        <h2>鏍囩鍖哄煙 / 瑙﹀彂閰嶇疆</h2>
+        <span>鍦ㄨ鎯呴〉鍐呯洿鎺ラ€夋嫨鏍囩銆佷慨鏀瑰弬鏁般€佸垹闄ゅ崟涓爣绛炬垨娓呯┖鍏ㄩ儴鏍囩銆?/span>
+      </div>
+      <div className="tag-warning">鏍囩淇敼浼氬悓姝ユ洿鏂拌鎯呴〉鍧愭爣鏄剧ず锛屽垹闄ゅ悗鍙噸鏂版柊澧炲苟閰嶇疆鏂扮殑鏍囩鍖哄煙銆?/div>
+      <div className={showPreview ? "detail-tag-config-layout" : "detail-tag-config-layout detail-tag-config-layout-single"}>
+        {showPreview ? renderTagCoordinatePreview() : null}
+        <div className="tag-region-panel detail-tag-config-panel">
+          {showPreview ? null : (
+            <div className="detail-inline-note">
+              <strong>褰撳墠浣跨敤涓荤晫闈㈠潗鏍囪酱</strong>
+              <span>鏍囩浣嶇疆鍜屽昂瀵歌皟鏁村悗锛屼細鐩存帴鍙嶆槧鍦ㄤ腑闂村潗鏍囩郴閲岋紝杩欓噷鍙繚鐣欐爣绛鹃厤缃〃鍗曘€?/span>
+            </div>
+          )}
+          <div className="tag-region-panel-heading">
+            <strong>鏍囩閲嶉厤缃?/strong>
+            <button type="button" className="range-tool-button" onClick={addTagRegion}>
+              鏂板鍖哄煙
+            </button>
+          </div>
+          <div className="detail-tag-config-toolbar">
+            <label className="form-field">
+              <span>閫夋嫨鏍囩</span>
+              <select
+                value={selectedTagRegion?.id ?? ""}
+                onChange={(event) => setSelectedTagRegionId(event.target.value ? Number(event.target.value) : null)}
+                disabled={!tagRegions.length}
+              >
+                {tagRegions.length ? (
+                  tagRegions.map((region) => (
+                    <option key={region.id} value={region.id}>
+                      {region.name} / IDX {region.index}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">鏆傛棤鏍囩</option>
+                )}
+              </select>
+            </label>
+            <div className="detail-button-row">
+              <button
+                type="button"
+                className="range-tool-button"
+                disabled={!selectedTagRegion}
+                onClick={() => {
+                  if (selectedTagRegion) {
+                    removeTagRegion(selectedTagRegion.id);
+                  }
+                }}
+              >
+                娓呴櫎褰撳墠鏍囩
+              </button>
+              <button
+                type="button"
+                className="range-tool-button"
+                disabled={!tagRegions.length}
+                onClick={clearAllTagRegions}
+              >
+                娓呴櫎鎵€鏈夋爣绛?              </button>
+            </div>
+          </div>
+          {selectedTagRegion ? (
+            <div className="tag-region-editor detail-tag-region-editor-single">
+              <div className="tag-region-editor-title">
+                <strong>{selectedTagRegion.name}</strong>
+                <span>IDX {selectedTagRegion.index} / IO {selectedTagRegion.ioIndex}</span>
+              </div>
+              {renderTagRegionFieldGrid(selectedTagRegion)}
+            </div>
+          ) : (
+            <div className="detail-tag-empty">
+              <strong>鏆傛棤鏍囩鍖哄煙</strong>
+              <span>鐐瑰嚮鈥滄柊澧炲尯鍩熲€濆悗锛屽彲鍦ㄨ繖閲岄€夋嫨鏍囩骞堕噸鏂伴厤缃€?/span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDetailParameterConfigPanel = () => (
+    <div className="detail-param-editor-layout">
+      <div className="config-section">
+        <div className="section-title">
+          <h2>浜烘暟缁熻鍙傛暟璁剧疆</h2>
+          <span>瀹炴椂浜烘暟銆佽建杩圭背鏁般€佽建杩瑰瓨鍦ㄦ椂闂村拰鏃犱汉鏃堕棿閮藉湪杩欓噷璋冩暣銆?/span>
+        </div>
+        <div className="feature-list">
+          <div className="feature-row">
+            <div>
+              <strong>浜轰綋瀛樺湪浣胯兘</strong>
+              <span>鎺у埗璁惧鏄惁涓婃姤浜轰綋瀛樺湪鐘舵€併€?/span>
+            </div>
+            <button
+              type="button"
+              className={presenceEnabled ? "switch switch-on" : "switch"}
+              onClick={() => setPresenceEnabled((prev) => !prev)}
+              aria-pressed={presenceEnabled}
+            >
+              <span />
+            </button>
+          </div>
+          <div className="feature-row">
+            <div>
+              <strong>杞ㄨ抗璺熻釜浣胯兘</strong>
+              <span>鎺у埗璇︽儏椤典腑鐨勭洰鏍囪建杩硅窡韪姸鎬併€?/span>
+            </div>
+            <button
+              type="button"
+              className={trackingEnabled ? "switch switch-on" : "switch"}
+              onClick={() => setTrackingEnabled((prev) => !prev)}
+              aria-pressed={trackingEnabled}
+            >
+              <span />
+            </button>
+          </div>
+        </div>
+        <div className="detail-settings-grid">
+          <label className="form-field">
+            <span>瀹炴椂浜烘暟涓婃姤鏃堕棿(/s)</span>
+            <input type="number" step="1" min="1" value={realTimePeopleTime} onChange={(event) => setRealTimePeopleTime(event.target.value)} />
+          </label>
+          <label className="form-field">
+            <span>杞ㄨ抗浜х敓绫虫暟(/cm)</span>
+            <input type="number" step="0.01" min="0" value={trackMeters} onChange={(event) => setTrackMeters(event.target.value)} />
+          </label>
+          <label className="form-field">
+            <span>杞ㄨ抗瀛樺湪鏃堕棿(/s)</span>
+            <input type="number" step="1" min="1" value={trackExistsTime} onChange={(event) => setTrackExistsTime(event.target.value)} />
+          </label>
+          <label className="form-field">
+            <span>鏃犱汉鏃堕棿(/s)</span>
+            <input type="number" step="1" min="1" value={unmannedTime} onChange={(event) => setUnmannedTime(event.target.value)} />
+          </label>
+        </div>
+      </div>
+
+      <div className="config-section">
+        <div className="section-title">
+          <h2>瀹夎淇℃伅璁剧疆</h2>
+          <span>璇︽儏椤靛唴鐩存帴璋冩暣瀹夎楂樺害锛屽畨瑁呮ā寮忓拰瑙掑害淇濇寔鍙鏄剧ず銆?/span>
+        </div>
+        <div className="form-grid">
+          <label className="form-field form-field-readonly">
+            <span>瀹夎妯″紡</span>
+            <input value="渚ц" readOnly />
+          </label>
+          <label className="form-field">
+            <span>楂樺害(cm)</span>
+            <input min="0" step="1" type="number" value={mountHeightCm} onChange={(event) => setMountHeightCm(event.target.value)} />
+          </label>
+          <label className="form-field form-field-readonly">
+            <span>瑙掑害</span>
+            <input value="0deg" readOnly />
+          </label>
+        </div>
+      </div>
+
+      <div className="config-section">
+        <div className="section-title">
+          <h2>杞ㄨ抗 / 鐩爣璺熻釜</h2>
+          <span>鍒囨崲杞ㄨ抗 LED 鍜岃繍鍔?LED 鐨勬樉绀虹姸鎬侊紝閲嶇疆璁惧鍙傛暟銆?/span>
+        </div>
+        <div className="feature-list">
+          <div className="feature-row">
+            <div>
+              <strong>杞ㄨ抗 LED 浣胯兘寮€鍏?/strong>
+              <span>鐢ㄤ簬鎺у埗杞ㄨ抗鐘舵€佺殑 LED 鏄剧ず銆?/span>
+            </div>
+            <button
+              type="button"
+              className={trackLedEnabled ? "switch switch-on" : "switch"}
+              onClick={() => setTrackLedEnabled((prev) => !prev)}
+              aria-pressed={trackLedEnabled}
+            >
+              <span />
+            </button>
+          </div>
+          <div className="feature-row">
+            <div>
+              <strong>杩愬姩 LED 浣胯兘寮€鍏?/strong>
+              <span>鐢ㄤ簬鎺у埗杩愬姩鐘舵€佺殑 LED 鏄剧ず銆?/span>
+            </div>
+            <button
+              type="button"
+              className={motionLedEnabled ? "switch switch-on" : "switch"}
+              onClick={() => setMotionLedEnabled((prev) => !prev)}
+              aria-pressed={motionLedEnabled}
+            >
+              <span />
+            </button>
+          </div>
+        </div>
+        <div className="detail-button-row">
+          <button type="button" className="mini-button">閲嶇疆鎸夐挳</button>
+          <button type="button" className="mini-button">鎭㈠鍑哄巶鎸夐挳</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDetailConfigWorkspace = () => {
+    const panelExpanded = detailConfigView !== "none";
+
+    const detailConfigLabels: Record<Exclude<DetailConfigView, "none">, { title: string; description: string }> = {
+      range: {
+        title: "杞ㄨ抗鑼冨洿璁剧疆",
+        description: "鐩存帴鍦ㄨ澶囪鎯呴〉涓厤缃洓鏂规帰娴嬭寖鍥淬€佽建杩瑰涔犺寖鍥村拰鑷畾涔夎建杩硅寖鍥淬€?,
+      },
+      tags: {
+        title: "鏍囩鍖哄煙 / 瑙﹀彂",
+        description: "閫夋嫨宸叉湁鏍囩閲嶆柊閰嶇疆锛屾垨鍦ㄥ綋鍓嶈鎯呴〉鍐呮柊澧炪€佸垹闄ゃ€佹竻绌烘爣绛惧尯鍩熴€?,
+      },
+      params: {
+        title: "璁惧鍙傛暟閰嶇疆",
+        description: "鍦ㄧ嫭绔嬬殑鍙傛暟閰嶇疆瀛愮晫闈腑璋冩暣浜烘暟缁熻銆佸畨瑁呬俊鎭拰 LED 浣胯兘鐘舵€併€?,
+      },
+    };
+
+    const currentView = detailConfigView === "none" ? "range" : detailConfigView;
+    const current = detailConfigLabels[currentView];
+
+    return (
+      <aside className={panelExpanded ? "display-panel detail-extension-panel" : "display-panel detail-extension-panel detail-extension-panel-collapsed"}>
+        <div className="detail-extension-panel-header">
+          <div>
+            <h2>鎵╁睍閰嶇疆</h2>
+            <span>{panelExpanded ? current.title : "灞曞紑鍚庡彲鍒囨崲杞ㄨ抗鑼冨洿銆佹爣绛惧拰璁惧鍙傛暟閰嶇疆"}</span>
+          </div>
+          <button
+            type="button"
+            className="mini-button"
+            onClick={() => setDetailConfigView(panelExpanded ? "none" : "range")}
+          >
+            {panelExpanded ? "鏀惰捣" : "灞曞紑"}
+          </button>
+        </div>
+
+        {panelExpanded ? (
+          <>
+            <div className="detail-extension-tabs" aria-label="鎵╁睍閰嶇疆瀵艰埅">
+              <button
+                type="button"
+                className={currentView === "range" ? "detail-extension-tab detail-extension-tab-active" : "detail-extension-tab"}
+                onClick={() => setDetailConfigView("range")}
+              >
+                杞ㄨ抗鑼冨洿璁剧疆
+              </button>
+              <button
+                type="button"
+                className={currentView === "tags" ? "detail-extension-tab detail-extension-tab-active" : "detail-extension-tab"}
+                onClick={() => setDetailConfigView("tags")}
+              >
+                鏍囩閰嶇疆
+              </button>
+              <button
+                type="button"
+                className={currentView === "params" ? "detail-extension-tab detail-extension-tab-active" : "detail-extension-tab"}
+                onClick={() => setDetailConfigView("params")}
+              >
+                璁惧鍙傛暟閰嶇疆
+              </button>
+            </div>
+            <div className="detail-extension-panel-body">
+              {currentView === "range" ? renderRangeConfigSection(false) : null}
+              {currentView === "tags" ? renderDetailTagConfigPanel(false) : null}
+              {currentView === "params" ? renderDetailParameterConfigPanel() : null}
+            </div>
+          </>
+        ) : (
+          <div className="detail-extension-collapsed-actions">
+            <button type="button" className="detail-extension-entry" onClick={() => openDetailConfigView("range")}>
+              杞ㄨ抗鑼冨洿璁剧疆
+            </button>
+            <button type="button" className="detail-extension-entry" onClick={() => openDetailConfigView("tags")}>
+              鏍囩閰嶇疆
+            </button>
+            <button type="button" className="detail-extension-entry" onClick={() => openDetailConfigView("params")}>
+              璁惧鍙傛暟閰嶇疆
+            </button>
+          </div>
+        )}
+      </aside>
+    );
+  };
+
+  const renderManagement = () => (
+    <section className="page-panel">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Device Management</p>
+          <h1>璁惧绠＄悊</h1>
+        </div>
+        <span className={`scan-badge scan-badge-${scanState}`}>{statusText[scanState]}</span>
+      </header>
+
+      <section className="guide-panel" aria-label="浣跨敤鏁欑▼鍜屾敞鎰忎簨椤?>
+        <div>
+          <h2>浣跨敤鏁欑▼</h2>
+          <div className="guide-list">
+            <div className="guide-item">
+              <strong>1. 鎵弿璁惧</strong>
+              <span>鐐瑰嚮鈥滄壂鎻忚澶団€濆埛鏂板垪琛紝鎵弿鍒扮殑璁惧浼氭樉绀哄湪涓嬫柟銆?/span>
+            </div>
+            <div className="guide-item">
+              <strong>2. 棣栨浣跨敤鍏堝垵濮嬪寲</strong>
+              <span>鏈垵濮嬪寲鐨勮澶囨棤娉曠洿鎺ユ煡鐪嬭鎯咃紝浼氳嚜鍔ㄨ繘鍏ュ垵濮嬪寲娴佺▼銆?/span>
+            </div>
+            <div className="guide-item">
+              <strong>3. 鍒濆鍖栧悗鏌ョ湅璇︽儏</strong>
+              <span>瀹屾垚璁惧缁戝畾鍜屽垵濮嬪寲閰嶇疆鍚庯紝鍙繘鍏ヨ澶囪鎯呮煡鐪嬪疄鏃剁姸鎬併€?/span>
+            </div>
+          </div>
+        </div>
+        <div className="guide-note">
+          <h2>娉ㄦ剰浜嬮」</h2>
+          <p>鍒濆鍖栨祦绋嬪寘鍚悕瀛椼€佽澶囩储寮曞拰 MAC 鍦板潃銆傝皟璇曢樁娈垫壂鎻忓け璐ヤ細鏄剧ず寮€鍙戝亣璁惧锛屾帴鍏ョ湡瀹炶澶囧悗璇风‘璁ゅ悗绔湇鍔″拰 Home Assistant 鎺堟潈鍙敤銆?/p>
+        </div>
+      </section>
+
+      <section className="summary-grid" aria-label="璁惧姒傝">
+        <div className="summary-card">
+          <span>鎵弿缁撴灉</span>
+          <strong>{devices.length}</strong>
+        </div>
+        <div className="summary-card">
+          <span>褰撳墠閫夋嫨</span>
+          <strong>{selectedDevice?.name ?? "鏈€夋嫨"}</strong>
+        </div>
+      </section>
+
+      <section className="device-section">
+        <div className="section-title">
+          <div className="scan-heading">
+            <button
+              type="button"
+              className="section-title-button"
+              onClick={scanDevices}
+              disabled={scanState === "scanning"}
+            >
+              {scanState === "scanning" ? "鎵弿涓? : "鎵弿璁惧"}
+            </button>
+            <div className="bound-device-summary" aria-label="宸茬粦瀹氳澶?>
+              <div>
+                <strong>宸茬粦瀹氳澶?/strong>
+                <span>{boundDevices.length ? `${boundDevices.length} 鍙癭 : "鏆傛棤"}</span>
+              </div>
+              <div className="bound-device-list">
+                {boundDevices.length ? (
+                  boundDevices.map((device) => (
+                    <span className="bound-device-pill" key={device.id}>
+                      {device.name}
+                      <em className={device.status === "online" ? "online-status online-status-on" : "online-status"}>
+                        {device.status === "online" ? "鍦ㄧ嚎" : "绂荤嚎"}
+                      </em>
+                    </span>
+                  ))
+                ) : (
+                  <span className="bound-device-empty">瀹屾垚鍒濆鍖栧悗浼氭樉绀哄湪杩欓噷</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <span>{devices.length ? `${devices.length} 涓彲鐢ㄨ澶嘸 : "鏆傛棤璁惧"}</span>
+        </div>
+
+        {devices.length ? (
+          <div className="device-list">
+            {devices.map((device) => (
+              <div
+                className={device.id === selectedDeviceId ? "device-row device-row-selected" : "device-row"}
+                key={device.id}
+                onClick={() => setSelectedDeviceId(device.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setSelectedDeviceId(device.id);
+                  }
+                }}
+                aria-pressed={device.id === selectedDeviceId}
+                role="button"
+                tabIndex={0}
+              >
+                <span className="device-radio" aria-hidden="true" />
+                <span className="device-main">
+                  <strong>{device.name}</strong>
+                  <small>
+                    {device.model} / Prefix: {device.prefix}
+                  </small>
+                </span>
+                <span className="device-meta">
+                  <span>{device.entityCount} entities</span>
+                  <em className={device.bound ? "bind-status bind-status-on" : "bind-status"}>
+                    {device.bound ? "宸茬粦瀹? : "鏈粦瀹?}
+                  </em>
+                  <em className={device.status === "online" ? "online-status online-status-on" : "online-status"}>
+                    {device.status === "online" ? "鍦ㄧ嚎" : "绂荤嚎"}
+                  </em>
+                </span>
+                <span className="device-actions">
+                  <button
+                    type="button"
+                    className="device-action-button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      enterDeviceConfig(device);
+                    }}
+                  >
+                    鍒濆鍖栨祦绋?                  </button>
+                  <button
+                    type="button"
+                    className="device-action-button device-action-primary"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      enterDeviceDetail(device);
+                    }}
+                  >
+                    鏌ョ湅璁惧璇︽儏
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <strong>鏆傛棤鎵弿缁撴灉</strong>
+            <span>鐐瑰嚮鈥滆澶囨壂鎻忊€濆悗锛屾壂鎻忓埌鐨?C4004 璁惧浼氭樉绀哄湪杩欓噷銆?/span>
+          </div>
+        )}
+      </section>
+    </section>
+  );
+
+  const renderConfigStep = () => {
+    if (activeStep === "bind") {
+      return (
+        <section className="config-workspace">
+          <div className="config-section bind-section">
+            <div className="section-title">
+              <h2>璁惧缁戝畾</h2>
+              <span>缁戝畾璁惧鏄垵濮嬪寲娴佺▼鐨勭涓€姝?/span>
+            </div>
+            <div className="bind-form-grid">
+              <label className="form-field form-field-readonly">
+                <span>鍚嶅瓧</span>
+                <input value={selectedDevice?.name ?? ""} readOnly />
+              </label>
+              <label className="form-field">
+                <span>璁惧绱㈠紩</span>
+                <input
+                  min="1"
+                  max="255"
+                  type="number"
+                  value={
+                    selectedDevice
+                      ? (deviceIndexDrafts[selectedDevice.id] ?? String(selectedDevice.deviceIndex))
+                      : ""
+                  }
+                  onChange={(event) => {
+                    if (selectedDevice) {
+                      updateDeviceIndex(selectedDevice.id, event.target.value);
+                    }
+                  }}
+                />
+              </label>
+              <label className="form-field form-field-readonly">
+                <span>MAC 鍦板潃</span>
+                <input value={selectedDevice?.macAddress ?? ""} readOnly />
+              </label>
+            </div>
+            {renderStepNavigation(
+              <button
+                type="button"
+                className="action-button action-primary"
+                disabled={!selectedDevice || selectedDevice.bound}
+                onClick={() => {
+                  if (selectedDevice) {
+                    bindDevice(selectedDevice);
+                  }
+                }}
+              >
+                {selectedDevice?.bound ? "宸茬粦瀹? : "缁戝畾璁惧"}
+              </button>,
+            )}
+          </div>
+        </section>
+      );
+    }
+
+    if (activeStep === "basic") {
+      return (
+        <section className="config-workspace">
+          <div className="config-section">
+            <div className="section-title">
+              <h2>鍩虹淇℃伅閰嶇疆</h2>
+              <span>渚ц妯″紡锛岄珮搴﹀彲璋冭妭锛岃搴﹂殢瀹夎鍙傛暟灞曠ず</span>
+            </div>
+            <div className="form-grid">
+              <label className="form-field form-field-readonly">
+                <span>瀹夎妯″紡</span>
+                <input value="渚ц" readOnly />
+              </label>
+              <label className="form-field">
+                <span>楂樺害(cm)</span>
+                <input
+                  min="0"
+                  step="1"
+                  type="number"
+                  value={mountHeightCm}
+                  onChange={(event) => setMountHeightCm(event.target.value)}
+                />
+              </label>
+              <label className="form-field form-field-readonly">
+                <span>瑙掑害</span>
+                <input value="0deg" readOnly />
+              </label>
+            </div>
+          </div>
+
+          <div className="config-section config-note">
+            <strong>杩涘叆璁惧璇︽儏鏄剧ず鐣岄潰</strong>
+            <span>鍩虹淇℃伅瀹屾垚鍚庣户缁厤缃姛鑳姐€佹帰娴嬭寖鍥村拰鏍囩锛屾渶鍚庤烦杞埌璁惧瀹炴椂鏄剧ず銆?/span>
+          </div>
+          {renderStepNavigation()}
+        </section>
+      );
+    }
+
+    if (activeStep === "feature") {
+      return (
+        <section className="config-workspace">
+          <div className="config-section">
+            <div className="section-title">
+              <h2>鍔熻兘浣胯兘閰嶇疆</h2>
+              <span>浜烘暟缁熻鍙傛暟鐏拌壊灞曠ず锛孡ED 寮€鍏冲彲閰嶇疆</span>
+            </div>
+            <div className="metric-grid">
+              <div className="metric-card metric-card-readonly">
+                <span>Real-time People Time</span>
+                <strong>{realTimePeopleTime} s</strong>
+              </div>
+              <div className="metric-card metric-card-readonly">
+                <span>Track Meters</span>
+                <strong>{trackMeters} cm</strong>
+              </div>
+              <div className="metric-card metric-card-readonly">
+                <span>Track Exists Time</span>
+                <strong>{trackExistsTime} s</strong>
+              </div>
+              <div className="metric-card metric-card-readonly">
+                <span>Unmanned Time</span>
+                <strong>{unmannedTime} s</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="feature-list">
+            <div className="feature-row">
+              <div>
+                <strong>鍐呴儴榛樿寮€鍚建杩硅窡韪姛鑳?/strong>
+                <span>閰嶇疆娴佺▼涓婁笉璧版鍔熻兘閰嶇疆锛屽悗绔富鍔ㄩ厤缃畬鎴愭椂榛樿鎵撳紑銆?/span>
+              </div>
+              <span className="state-chip state-chip-on">榛樿寮€鍚?/span>
+            </div>
+            <div className="feature-row">
+              <div>
+                <strong>杞ㄨ抗 LED 浣胯兘寮€鍏?/strong>
+                <span>鐢ㄤ簬鎺у埗杞ㄨ抗鐘舵€佺殑 LED 鏄剧ず銆?/span>
+              </div>
+              <button
+                type="button"
+                className={trackLedEnabled ? "switch switch-on" : "switch"}
+                onClick={() => setTrackLedEnabled((prev) => !prev)}
+                aria-pressed={trackLedEnabled}
+              >
+                <span />
+              </button>
+            </div>
+            <div className="feature-row">
+              <div>
+                <strong>杩愬姩 LED 浣胯兘寮€鍏?/strong>
+                <span>鐢ㄤ簬鎺у埗杩愬姩鐘舵€佺殑 LED 鏄剧ず銆?/span>
+              </div>
+              <button
+                type="button"
+                className={motionLedEnabled ? "switch switch-on" : "switch"}
+                onClick={() => setMotionLedEnabled((prev) => !prev)}
+                aria-pressed={motionLedEnabled}
+              >
+                <span />
+              </button>
+            </div>
+          </div>
+          {renderStepNavigation()}
+        </section>
+      );
+    }
+
+    if (activeStep === "range") {
+      const rangeGridLines: ReactNode[] = [];
+      const rangeTickLabels: ReactNode[] = [];
+      const rangeLeftInput = Math.min(rangeConfig.xMin, rangeConfig.xMax) / 100;
+      const rangeRightInput = Math.max(rangeConfig.xMin, rangeConfig.xMax) / 100;
+      const rangeBottomInput = Math.min(rangeConfig.yMin, rangeConfig.yMax) / 100;
+      const rangeTopInput = Math.max(rangeConfig.yMin, rangeConfig.yMax) / 100;
+      const rangeWidthM = Math.max(rangeRightInput - rangeLeftInput, 0);
+      const rangeHeightM = Math.max(rangeTopInput - rangeBottomInput, 0);
+      const rangeSamplePoints = [
+        { x: rangeLeftInput + rangeWidthM * 0.28, y: rangeBottomInput + rangeHeightM * 0.72 },
+        { x: rangeLeftInput + rangeWidthM * 0.68, y: rangeBottomInput + rangeHeightM * 0.58 },
+        { x: rangeLeftInput + rangeWidthM * 0.46, y: rangeBottomInput + rangeHeightM * 0.28 },
+      ];
+
+      for (let x = rangePreviewXMinM; x <= rangePreviewXMaxM; x += rangePreviewGridM) {
+        const xPos = toRangePreviewX(x);
+        rangeGridLines.push(
+          <line
+            className={x === 0 ? "range-chart-axis" : "range-chart-grid"}
+            key={`range-x-${x}`}
+            x1={xPos}
+            x2={xPos}
+            y1={0}
+            y2={rangePreviewHeight}
+            vectorEffect="non-scaling-stroke"
+          />,
+        );
+        rangeTickLabels.push(
+          <text className="range-chart-label" key={`range-x-label-${x}`} x={xPos} y={rangePreviewHeight + 30}>
+            {x}m
+          </text>,
+        );
+      }
+
+      for (let y = rangePreviewYMinM; y <= rangePreviewYMaxM; y += rangePreviewGridM) {
+        const yPos = toRangePreviewY(y);
+        rangeGridLines.push(
+          <line
+            className={y === 0 ? "range-chart-axis" : "range-chart-grid"}
+            key={`range-y-${y}`}
+            x1={0}
+            x2={rangePreviewWidth}
+            y1={yPos}
+            y2={yPos}
+            vectorEffect="non-scaling-stroke"
+          />,
+        );
+        rangeTickLabels.push(
+          <text className="range-chart-label range-chart-y-label" key={`range-y-label-${y}`} x={-14} y={yPos + 5}>
+            {y}m
+          </text>,
+        );
+      }
+
+      const rangeLeftM = clampRangePreviewValue(rangeLeftInput, rangePreviewXMinM, rangePreviewXMaxM);
+      const rangeRightM = clampRangePreviewValue(rangeRightInput, rangePreviewXMinM, rangePreviewXMaxM);
+      const rangeBottomM = clampRangePreviewValue(rangeBottomInput, rangePreviewYMinM, rangePreviewYMaxM);
+      const rangeTopM = clampRangePreviewValue(rangeTopInput, rangePreviewYMinM, rangePreviewYMaxM);
+      const rangeRectLeft = Math.min(toRangePreviewX(rangeLeftM), toRangePreviewX(rangeRightM));
+      const rangeRectRight = Math.max(toRangePreviewX(rangeLeftM), toRangePreviewX(rangeRightM));
+      const rangeRectTop = Math.min(toRangePreviewY(rangeTopM), toRangePreviewY(rangeBottomM));
+      const rangeRectBottom = Math.max(toRangePreviewY(rangeTopM), toRangePreviewY(rangeBottomM));
+      const customRangeChartPoints = customRangePoints.map(toRangePreviewPoint);
+      const learnedRangeChartPoints = learnedRangePoints.map(toRangePreviewPoint);
+      const customRangePreviewChartPoints =
+        customRangePreviewPoint && customRangePoints.length
+          ? [customRangePoints[customRangePoints.length - 1], customRangePreviewPoint].map(toRangePreviewPoint)
+          : [];
+      const liveCustomRangeChartPoints =
+        !customRangeConfirmed && customRangePreviewPoint && customRangePoints.length >= 2
+          ? [...customRangePoints, customRangePreviewPoint].map(toRangePreviewPoint)
+          : !customRangeConfirmed && customRangePoints.length >= 3
+            ? customRangeChartPoints
+            : [];
+
+      return (
+        <section className="config-workspace range-workspace">
+          <div className="config-section">
+            <div className="section-title">
+              <h2>鎺㈡祴鑼冨洿閰嶇疆</h2>
+              <span>鍧愭爣杞淬€佸洓鏂硅寖鍥淬€佽建杩瑰涔犲拰鑷畾涔夋爣瀹氳寖鍥?/span>
+            </div>
+            <div className="range-layout">
+              <div className="range-preview">
+                <svg
+                  ref={rangeChartRef}
+                  className={rangeMode === "custom" && !customRangeConfirmed ? "range-chart range-chart-sketch-enabled" : "range-chart"}
+                  viewBox={`0 0 ${rangePreviewViewBoxWidth} ${rangePreviewViewBoxHeight}`}
+                  onPointerDown={handleCustomRangeCanvasClick}
+                  onPointerMove={previewCustomRangeLine}
+                  onPointerLeave={stopCustomRangePreview}
+                  onMouseLeave={stopCustomRangePreview}
+                  role="img"
+                  aria-label="鎺㈡祴鑼冨洿鍧愭爣杞达紝X 杞翠粠 -5m 鍒?5m锛孻 杞翠粠 0m 鍒?9m"
+                >
+                  <rect
+                    className="range-chart-event-layer"
+                    x={0}
+                    y={0}
+                    width={rangePreviewViewBoxWidth}
+                    height={rangePreviewViewBoxHeight}
+                    onPointerMove={previewCustomRangeLine}
+                  />
+                  <g transform={`translate(${rangePreviewPadding.left}, ${rangePreviewPadding.top})`}>
+                    <rect
+                      className="range-chart-background"
+                      x={0}
+                      y={0}
+                      width={rangePreviewWidth}
+                      height={rangePreviewHeight}
+                    />
+                    {rangeGridLines}
+                    {rangeMode === "rect" && (
+                      <rect
+                        className="range-detection-area"
+                        x={rangeRectLeft}
+                        y={rangeRectTop}
+                        width={rangeRectRight - rangeRectLeft}
+                        height={rangeRectBottom - rangeRectTop}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                    {rangeSamplePoints.map((point, index) => {
+                      const previewPoint = toRangePreviewPoint({
+                        x: clampRangePreviewValue(point.x, rangePreviewXMinM, rangePreviewXMaxM),
+                        y: clampRangePreviewValue(point.y, rangePreviewYMinM, rangePreviewYMaxM),
+                      });
+                      return (
+                        <circle
+                          className="range-chart-dot"
+                          cx={previewPoint.x}
+                          cy={previewPoint.y}
+                          key={`${point.x}-${point.y}-${index}`}
+                          r="10"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      );
+                    })}
+                    {rangeMode === "learned" && learnedRangeChartPoints.length >= 3 && (
+                      <polygon
+                        className="range-learned-polygon"
+                        points={formatRangeSketchPoints(learnedRangeChartPoints)}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                    {rangeMode === "learned" && learnedRangeChartPoints.map((point, index) => (
+                      <g className="range-learned-vertex" key={`learned-${point.x}-${point.y}-${index}`}>
+                        <circle cx={point.x} cy={point.y} r="10" vectorEffect="non-scaling-stroke" />
+                      </g>
+                    ))}
+                    {rangeMode === "custom" && liveCustomRangeChartPoints.length >= 3 && (
+                      <polygon
+                        className="range-custom-polygon-preview"
+                        points={formatRangeSketchPoints(liveCustomRangeChartPoints)}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                    {rangeMode === "custom" && customRangeConfirmed && customRangeChartPoints.length >= 3 && (
+                      <polygon
+                        className="range-custom-polygon"
+                        points={formatRangeSketchPoints(customRangeChartPoints)}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                    {rangeMode === "custom" && customRangeChartPoints.length > 1 && (
+                      <polyline
+                        className="range-custom-line"
+                        points={formatRangeSketchPoints(customRangeChartPoints)}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                    {rangeMode === "custom" && customRangePreviewChartPoints.length > 1 && (
+                      <polyline
+                        className="range-custom-line range-custom-line-draft"
+                        points={formatRangeSketchPoints(customRangePreviewChartPoints)}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                    {rangeMode === "custom" &&
+                      customRangeChartPoints.map((point, index) => (
+                        <g className="range-custom-vertex" key={`${point.x}-${point.y}-${index}`}>
+                          <circle cx={point.x} cy={point.y} r="12" vectorEffect="non-scaling-stroke" />
+                          <text x={point.x} y={point.y + 4}>
+                            {index + 1}
+                          </text>
+                        </g>
+                      ))}
+                    <g
+                      aria-hidden="true"
+                      className="range-radar-origin"
+                      transform={`translate(${toRangePreviewX(0)}, ${toRangePreviewY(0)})`}
+                    >
+                      <path className="range-radar-wave" d="M -64 -24 Q 0 -88 64 -24" />
+                      <path className="range-radar-wave" d="M -44 -16 Q 0 -58 44 -16" />
+                      <path className="range-radar-wave" d="M -24 -9 Q 0 -32 24 -9" />
+                      <circle className="range-radar-dot" cx="0" cy="0" r="8" />
+                    </g>
+                    {rangeTickLabels}
+                    <text className="range-chart-axis-title" x={rangePreviewWidth + 22} y={rangePreviewHeight + 6}>
+                      X
+                    </text>
+                    <text className="range-chart-axis-title" x={toRangePreviewX(0) + 14} y={-14}>
+                      Y
+                    </text>
+                  </g>
+                </svg>
+              </div>
+
+              <div className="range-controls">
+                <div className="range-mode-selector" aria-label="鎺㈡祴鑼冨洿鏄剧ず妯″紡">
+                  <button
+                    type="button"
+                    className={rangeMode === "rect" ? "range-mode-button range-mode-button-active" : "range-mode-button"}
+                    onClick={() => selectRangeMode("rect")}
+                  >
+                    鍥涙柟鎺㈡祴鑼冨洿妯″紡
+                  </button>
+                  <button
+                    type="button"
+                    className={rangeMode === "learned" ? "range-mode-button range-mode-button-active" : "range-mode-button"}
+                    onClick={() => selectRangeMode("learned")}
+                  >
+                    杞ㄨ抗鎺㈡祴鑼冨洿妯″紡
+                  </button>
+                  <button
+                    type="button"
+                    className={rangeMode === "custom" ? "range-mode-button range-mode-button-active" : "range-mode-button"}
+                    onClick={() => selectRangeMode("custom")}
+                  >
+                    鑷畾涔夎建杩硅寖鍥存ā寮?                  </button>
+                </div>
+
+                <div className="range-mode-panel">
+                  {rangeMode === "rect" && (
+                    <div className="field-grid">
+                      {rangeConfigFields.map(({ field, label }) => (
+                        <label className="form-field" key={field}>
+                          <span>{label}</span>
+                          <input
+                            type="number"
+                            step="1"
+                            value={rangeConfig[field]}
+                            onChange={(event) => updateRangeConfig(field, event.target.value)}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {rangeMode === "learned" && (
+                    <>
+                      <div className="feature-row">
+                        <div>
+                          <strong>寮€鍚?/ 鍏抽棴瀛︿範鎺㈡祴鑼冨洿寮€鍏?/strong>
+                          <span>鎵撳紑鍚庤澶囪繘鍏ヨ建杩瑰涔犳祦绋嬨€?/span>
+                        </div>
+                        <button
+                          type="button"
+                          className={trackLearningEnabled ? "switch switch-on" : "switch"}
+                          onClick={() => setTrackLearningEnabled((prev) => !prev)}
+                          aria-pressed={trackLearningEnabled}
+                        >
+                          <span />
+                        </button>
+                      </div>
+                      <div className="range-point-list range-learned-points">
+                        <strong>浼犳劅鍣ㄥ涔犺寖鍥寸偣浣?cm)</strong>
+                        <code>{JSON.stringify(learnedRangePoints.map((point) => [Math.round(point.x * 100), Math.round(point.y * 100)]))}</code>
+                      </div>
+                      <div className="feature-row">
+                        <div>
+                          <strong>璁剧疆鍚敤杞ㄨ抗鎺㈡祴鑼冨洿妯″紡</strong>
+                          <span>宸茶鍙栦紶鎰熷櫒瀛︿範鑼冨洿</span>
+                        </div>
+                        <span className="state-chip state-chip-on">杞ㄨ抗鎺㈡祴妯″紡</span>
+                      </div>
+                    </>
+                  )}
+
+                  {rangeMode === "custom" && (
+                    <>
+                      <div className="feature-row">
+                        <div>
+                          <strong>鑷畾涔夋爣瀹氳寖鍥?/strong>
+                          <span>鑷畾涔夋爣瀹氱偣骞惰缃惎鐢ㄨ嚜瀹氫箟鎺㈡祴鑼冨洿銆?/span>
+                        </div>
+                        <span className="state-chip state-chip-on">褰撳墠妯″紡</span>
+                      </div>
+                      <div className="range-custom-toolbar">
+                        <span className={customRangePoints.length ? "state-chip state-chip-on" : "state-chip"}>
+                          {customRangeConfirmed
+                            ? `璁剧疆宸插畬鎴?${customRangePoints.length} 鐐筦
+                            : customRangePoints.length >= 3
+                              ? `涓存椂鑼冨洿 ${customRangePoints.length} 鐐癸紝纭鍓嶅彲缁х画娣诲姞`
+                            : customRangePoints.length
+                              ? `寰呴€夋嫨绗?${customRangePoints.length + 1} 鐐筦
+                              : "鐐瑰嚮鍧愭爣绯昏缃捣鐐?}
+                        </span>
+                        <div>
+                          <button
+                            type="button"
+                            className="range-tool-button range-tool-button-primary"
+                            disabled={customRangePoints.length < 3 || customRangeConfirmed}
+                            onClick={confirmCustomRange}
+                          >
+                            璁剧疆瀹屾垚纭
+                          </button>
+                          <button
+                            type="button"
+                            className="range-tool-button"
+                            disabled={!customRangePoints.length || customRangeConfirmed}
+                            onClick={undoCustomRangePoint}
+                          >
+                            鎾ら攢
+                          </button>
+                          <button
+                            type="button"
+                            className="range-tool-button"
+                            disabled={!customRangePoints.length}
+                            onClick={clearCustomRangePoints}
+                          >
+                            娓呴櫎
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          {renderStepNavigation()}
+        </section>
+      );
+    }
+
+    if (activeStep === "tags") {
+      return (
+        <section className="config-workspace">
+          <div className="config-section">
+            <div className="section-title">
+              <h2>鏍囩閰嶇疆</h2>
+              <span>閰嶇疆鍓嶉渶瑕佹竻闄ゆ墍鏈夋爣绛?/span>
+            </div>
+            <div className="tag-warning">閰嶇疆鍓嶉渶瑕佹竻闄ゆ墍鏈夋爣绛撅紝鍐嶈繘琛?GPIO 缁戝畾銆佸尯鍩熸爣绛惧拰澶氬尯鍩熸爣绛剧粦瀹氥€?/div>
+            <div className="tag-coordinate-layout">
+              {renderTagCoordinatePreview()}
+              <div className="tag-region-panel">
+                <div className="tag-region-panel-heading">
+                  <strong>鏍囩鍖哄煙</strong>
+                  <button type="button" className="range-tool-button" onClick={addTagRegion}>
+                    鏂板鍖哄煙
+                  </button>
+                </div>
+                <div className="tag-region-list">
+                  {tagRegions.map((region) => (
+                    <div className="tag-region-editor" key={region.id}>
+                      <div className="tag-region-editor-title">
+                        <strong>{region.name}</strong>
+                        <span>IDX {region.index} / IO {region.ioIndex}</span>
+                      </div>
+                      <div className="tag-region-input-grid">
+                        <label className="form-field">
+                          <span>鏍囩鍚嶇О</span>
+                          <select value={region.name} onChange={(event) => updateTagRegion(region.id, "name", event.target.value)}>
+                            {tagNameOptions.map((name) => (
+                              <option key={name} value={name}>
+                                {name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="form-field">
+                          <span>鏍囩绫诲瀷</span>
+                          <select value={region.tagType} onChange={(event) => updateTagRegion(region.id, "tagType", event.target.value)}>
+                            {tagTypeOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="form-field">
+                          <span>鑼冨洿绫诲瀷</span>
+                          <select
+                            value={region.rangeShape}
+                            onChange={(event) => updateTagRegion(region.id, "rangeShape", event.target.value)}
+                          >
+                            {tagRangeShapeOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="form-field">
+                          <span>鏍囩绱㈠紩</span>
+                          <input
+                            type="number"
+                            min={tagIndexMin}
+                            max={tagIndexMax}
+                            step="1"
+                            value={region.index}
+                            onChange={(event) => updateTagRegion(region.id, "index", event.target.value)}
+                          />
+                        </label>
+                        <label className="form-field">
+                          <span>IO 绱㈠紩</span>
+                          <input
+                            type="number"
+                            min={tagIndexMin}
+                            max={tagIndexMax}
+                            step="1"
+                            value={region.ioIndex}
+                            onChange={(event) => updateTagRegion(region.id, "ioIndex", event.target.value)}
+                          />
+                        </label>
+                        <label className="form-field">
+                          <span>{region.rangeShape === "circle" ? "X 鍗婂緞(cm)" : "X 瀹?cm)"}</span>
+                          <input
+                            type="number"
+                            step="1"
+                            value={Math.round(region.xSizeCm)}
+                            onChange={(event) => updateTagRegion(region.id, "xSizeCm", event.target.value)}
+                          />
+                        </label>
+                        <label className={region.rangeShape === "circle" ? "form-field form-field-readonly" : "form-field"}>
+                          <span>{region.rangeShape === "circle" ? "Y(楂?(cm) 鏃犳晥" : "Y(楂?(cm)"}</span>
+                          <input
+                            type="number"
+                            step="1"
+                            value={region.rangeShape === "circle" ? "" : Math.round(region.ySizeCm)}
+                            placeholder={region.rangeShape === "circle" ? "鏃犳晥" : undefined}
+                            disabled={region.rangeShape === "circle"}
+                            onChange={(event) => updateTagRegion(region.id, "ySizeCm", event.target.value)}
+                          />
+                        </label>
+                      </div>
+                      <button type="button" className="range-tool-button" onClick={() => removeTagRegion(region.id)}>
+                        鍒犻櫎鍖哄煙
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="tag-grid tag-grid-legacy">
+              <label className="form-field">
+                <span>GPIO 缁戝畾</span>
+                <input defaultValue="GPIO-01" />
+              </label>
+              <label className="form-field">
+                <span>鍖哄煙鏍囩</span>
+                <input defaultValue="浼氳瀹?A" />
+              </label>
+              <label className="form-field">
+                <span>鍖哄煙澶у皬鍙傛暟</span>
+                <input defaultValue="x:-2.4, y:0.8, w:4.8, l:6.2" />
+              </label>
+              <label className="form-field">
+                <span>绱㈠紩</span>
+                <input defaultValue="IDX-001" />
+              </label>
+            </div>
+            <div className="tag-actions">
+              <button type="button" className="action-button">娓呴櫎鎵€鏈夋爣绛?/button>
+              <button type="button" className="action-button action-primary">澶氬尯鍩熸爣绛剧粦瀹?/button>
+            </div>
+          </div>
+          {renderStepNavigation()}
+        </section>
+      );
+    }
+
+    return (
+      <section className="config-workspace">
+        <div className="complete-panel">
+          <span className="state-chip state-chip-on">閰嶇疆瀹屾垚</span>
+          <h2>璺宠浆鍒拌澶囪鎯呮樉绀虹晫闈?/h2>
+          <p>璁惧鍒濆鍖栫粦瀹氭祦绋嬪拰閰嶇疆浣跨敤娴佺▼宸茬粡瀹屾垚锛屽彲浠ユ煡鐪嬪疄鏃朵汉鏁般€佽建杩广€佸尯鍩熺姸鎬佸拰鐩爣琛ㄣ€?/p>
+          {renderStepNavigation(
+            undefined,
+            <button type="button" className="action-button action-primary" onClick={completeInitialization}>
+              鏌ョ湅璁惧璇︽儏鏄剧ず
+            </button>,
+          )}
+        </div>
+      </section>
+    );
+  };
+
+  const renderConfigFlow = () => (
+    <section className="configuration-panel">
+      <div className="section-title">
+        <h2>璁惧閰嶇疆浣跨敤娴佺▼</h2>
+        <span>杩涘叆璁惧鍒濆鍖栫粦瀹氭祦绋嬪悗鎸夐『搴忛厤缃?/span>
+      </div>
+      <div className="step-tabs" aria-label="璁惧閰嶇疆娴佺▼">
+        {configSteps.map((step, index) => (
+          <button
+            type="button"
+            className={[
+              "step-tab",
+              index < activeStepIndex ? "step-tab-completed" : "",
+              activeStep === step.id ? "step-tab-active" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            disabled
+            key={step.id}
+            aria-current={activeStep === step.id ? "step" : undefined}
+          >
+            <span>{index + 1}</span>
+            <strong>{step.title}</strong>
+            <small>{step.subtitle}</small>
+          </button>
+        ))}
+      </div>
+      {renderConfigStep()}
+    </section>
+  );
+
+  const renderTrackingWorkspace = () => {
+    const occupiedCount = trackingZones.filter((zone) => zone.occupied).length;
+    const activeTargets = trackingTargets.filter((target) => target.active);
+    const trackingGridLines: ReactNode[] = [];
+    const trackingGridLabels: ReactNode[] = [];
+    const rangeModeLabel: Record<RangeMode, string> = {
+      rect: "鍥涙柟鎺㈡祴鑼冨洿妯″紡",
+      learned: "杞ㄨ抗鎺㈡祴鑼冨洿妯″紡",
+      custom: "鑷畾涔夎建杩硅寖鍥存ā寮?,
+    };
+
+    for (let mm = trackingXMinMm; mm <= trackingXMaxMm; mm += trackingGridMm) {
+      const posX = toTrackingCanvasX(mm);
+      const isAxis = mm === 0;
+      trackingGridLines.push(
+        <line
+          className={isAxis ? "tracking-grid-axis" : "tracking-grid-line"}
+          key={`v-${mm}`}
+          x1={posX}
+          x2={posX}
+          y1={0}
+          y2={trackingCanvasHeight}
+          vectorEffect="non-scaling-stroke"
+        />,
+      );
+      if (mm === trackingXMinMm || mm === trackingXMaxMm || mm % 2000 === 0) {
+        trackingGridLabels.push(
+          <text className="tracking-grid-label" key={`x-label-${mm}`} x={posX} y={toTrackingCanvasY(0) + 24}>
+            {mm / 1000}m
+          </text>,
+        );
+      }
+    }
+
+    for (let mm = trackingYMinMm; mm <= trackingYMaxMm; mm += trackingGridMm) {
+      const posY = toTrackingCanvasY(mm);
+      const isAxis = mm === 0;
+      trackingGridLines.push(
+        <line
+          className={isAxis ? "tracking-grid-axis" : "tracking-grid-line"}
+          key={`h-${mm}`}
+          x1={0}
+          x2={trackingCanvasWidth}
+          y1={posY}
+          y2={posY}
+          vectorEffect="non-scaling-stroke"
+        />,
+      );
+      if (mm === trackingYMinMm || mm === trackingYMaxMm || mm % 2000 === 0) {
+        trackingGridLabels.push(
+          <text className="tracking-grid-label tracking-grid-label-y" key={`y-label-${mm}`} x={-10} y={posY + 5}>
+            {mm / 1000}m
+          </text>,
+        );
+      }
+    }
+
+    const pathData = trajectoryPointsMeters
+      .map((point) => toTrackingCanvasCoord({ x: point.x * 1000, y: point.y * 1000 }))
+      .map((point) => `${point.x},${point.y}`)
+      .join(" ");
+    const indexedTargetPoints = activeTargets.flatMap((target) => {
+      if (target.x === null || target.y === null) {
+        return [];
+      }
+
+      const point = toTrackingCanvasCoord({ x: target.x * 1000, y: target.y * 1000 });
+      return [{ index: target.index, x: point.x, y: point.y, kinesia: target.kinesia ?? 0 }];
+    });
+    const rectRangeLeft = Math.min(rangeConfig.xMin, rangeConfig.xMax) * 10;
+    const rectRangeRight = Math.max(rangeConfig.xMin, rangeConfig.xMax) * 10;
+    const rectRangeBottom = Math.min(rangeConfig.yMin, rangeConfig.yMax) * 10;
+    const rectRangeTop = Math.max(rangeConfig.yMin, rangeConfig.yMax) * 10;
+    const rangeTopLeft = toTrackingCanvasCoord({ x: rectRangeLeft, y: rectRangeTop });
+    const rangeBottomRight = toTrackingCanvasCoord({ x: rectRangeRight, y: rectRangeBottom });
+    const trackedTags = tagRegions.slice(0, 5);
+
+    return (
+      <section className="display-panel detail-dashboard" id="device-display">
+        <div className="section-title detail-dashboard-title">
+          <h2>璁惧璇︽儏鏄剧ず鐣岄潰</h2>
+          <span>鍧愭爣杞淬€佹爣绛惧尯鍩熴€佹帰娴嬭寖鍥淬€佺洰鏍囪建杩瑰拰璁惧鐘舵€?/span>
+        </div>
+        {selectedDevice ? (
+          <section className="tracking-device-bar">
+            <div>
+              <strong>{selectedDevice.name}</strong>
+              <span>
+                {selectedDevice.model} / Prefix: {selectedDevice.prefix}
+              </span>
+            </div>
+            <div className="tracking-device-stats">
+              <span>{selectedDevice.bound ? "瀹歌尙绮︾€? : "瀵板懐绮︾€?}</span>
+            </div>
+          </section>
+        ) : null}
+
+        <div className="detail-layout">
+          <aside className="detail-stack detail-stack-left">
+            <section className="tracking-card detail-card">
+              <div className="tracking-panel-heading">
+                <h2>浜烘暟鏄剧ず</h2>
+                <span className="tracking-chip">{activeTargets.length} 浜?/span>
+              </div>
+              <div className="detail-metric-grid">
+                <div>
+                  <span>瀹炴椂浜烘暟鏄剧ず</span>
+                  <strong>{activeTargets.length}</strong>
+                </div>
+                <div>
+                  <span>杩愬姩鐩爣</span>
+                  <strong>{indexedTargetPoints.length}</strong>
+                </div>
+              </div>
+              <button type="button" className="mini-button">娓呴櫎浜烘暟</button>
+            </section>
+
+            <section className="tracking-card detail-card">
+              <div className="tracking-panel-heading">
+                <h2>鍩虹淇℃伅鏄剧ず</h2>
+                <span className="tracking-chip">{selectedDevice?.status === "online" ? "鍦ㄧ嚎" : "绂荤嚎"}</span>
+              </div>
+              <div className="tracking-summary">
+                <div>
+                  <span>瀛樺湪淇℃伅</span>
+                  <strong>鏈変汉</strong>
+                </div>
+                <div>
+                  <span>杩愬姩淇℃伅</span>
+                  <strong>杩愬姩涓?/strong>
+                </div>
+                <div>
+                  <span>鍏叡鐣岄潰</span>
+                  <strong>璁惧鍦ㄧ嚎</strong>
+                </div>
+              </div>
+            </section>
+
+            <section className="tracking-card detail-card">
+              <div className="tracking-panel-heading">
+                <h2>鍖哄煙瀹炴椂鐘舵€?/h2>
+                <span className="tracking-chip">{occupiedCount}/6</span>
+              </div>
+              <div className="zone-status-grid">
+                {trackingZones.map((zone) => (
+                  <div className={zone.occupied ? "zone-status occupied" : "zone-status"} key={zone.id}>
+                    <span>{zone.name}</span>
+                    <strong>{zone.occupied ? "鏈変汉" : "鏃犱汉"}</strong>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </aside>
+
+          <section className="tracking-map-panel detail-map-panel">
+            <div className="tracking-panel-heading">
+              <div>
+                <h2>鍧愭爣杞?/h2>
+                <span>澶氳建杩圭偣瀹炴椂鏇存柊 / 鍖哄煙妗嗘樉绀?/ 鎺㈡祴鑼冨洿妗?/span>
+              </div>
+              <span className="tracking-chip">{activeTargets.length}/8 targets</span>
+            </div>
+            <div className="coordinate-canvas detail-coordinate-canvas">
+              <svg
+                viewBox={`${-trackingCanvasPadding} ${-trackingCanvasPadding} ${
+                  trackingCanvasWidth + trackingCanvasPadding * 2
+                } ${trackingCanvasHeight + trackingCanvasPadding * 2}`}
+                preserveAspectRatio="xMidYMid meet"
+                role="img"
+                aria-label="C4004 tracking coordinate preview"
+              >
+                <rect
+                  x={-trackingCanvasPadding}
+                  y={-trackingCanvasPadding}
+                  width={trackingCanvasWidth + trackingCanvasPadding * 2}
+                  height={trackingCanvasHeight + trackingCanvasPadding * 2}
+                  fill="#f8fafc"
+                />
+                {trackingGridLines}
+                {trackingGridLabels}
+                <rect
+                  className="tracking-range-frame"
+                  x={rangeTopLeft.x}
+                  y={rangeTopLeft.y}
+                  width={rangeBottomRight.x - rangeTopLeft.x}
+                  height={rangeBottomRight.y - rangeTopLeft.y}
+                  vectorEffect="non-scaling-stroke"
+                />
+                <text x={trackingCanvasWidth - 24} y={toTrackingCanvasY(0) - 14} className="tracking-axis-label">
+                  X
+                </text>
+                <text x={toTrackingCanvasX(0) + 12} y={26} className="tracking-axis-label">
+                  Y
+                </text>
+
+                {trackingZones.map((zone) => {
+                  const center = toTrackingCanvasCoord({ x: zone.centerX, y: zone.centerY });
+                  const radius = Math.abs(toTrackingCanvasX(zone.centerX + zone.radius) - center.x);
+                  const xMin = Math.min(zone.xMin, zone.xMax);
+                  const xMax = Math.max(zone.xMin, zone.xMax);
+                  const yMin = Math.min(zone.yMin, zone.yMax);
+                  const yMax = Math.max(zone.yMin, zone.yMax);
+                  const topLeft = toTrackingCanvasCoord({ x: xMin, y: yMax });
+                  const bottomRight = toTrackingCanvasCoord({ x: xMax, y: yMin });
+
+                  return (
+                    <g className={zone.occupied ? "zone-shape zone-shape-occupied" : "zone-shape"} key={zone.id}>
+                      {zone.shape === "circle" ? (
+                        <circle cx={center.x} cy={center.y} r={radius} vectorEffect="non-scaling-stroke" />
+                      ) : (
+                        <rect
+                          x={topLeft.x}
+                          y={topLeft.y}
+                          width={bottomRight.x - topLeft.x}
+                          height={bottomRight.y - topLeft.y}
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      )}
+                      <text x={center.x} y={center.y + 5}>
+                        {zone.occupied ? `${zone.name} 杩愬姩` : zone.name}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {trackedTags.map((region) => {
+                  const centerM = { x: (region.xMin + region.xMax) / 2, y: (region.yMin + region.yMax) / 2 };
+                  const center = toTrackingCanvasCoord({ x: centerM.x * 1000, y: centerM.y * 1000 });
+                  const radius = Math.abs(toTrackingCanvasX(centerM.x * 1000 + region.xSizeCm * 10) - center.x);
+                  const topLeft = toTrackingCanvasCoord({ x: region.xMin * 1000, y: region.yMax * 1000 });
+                  const bottomRight = toTrackingCanvasCoord({ x: region.xMax * 1000, y: region.yMin * 1000 });
+                  const tagLabel = tagTypeOptions.find((option) => option.value === region.tagType)?.label ?? "鏃?;
+
+                  return (
+                    <g className="detail-tag-shape" key={region.id}>
+                      {region.rangeShape === "circle" ? (
+                        <circle cx={center.x} cy={center.y} r={radius} vectorEffect="non-scaling-stroke" />
+                      ) : (
+                        <rect
+                          x={topLeft.x}
+                          y={topLeft.y}
+                          width={bottomRight.x - topLeft.x}
+                          height={bottomRight.y - topLeft.y}
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      )}
+                      <text x={center.x} y={center.y - 4}>
+                        <tspan x={center.x}>{region.name}</tspan>
+                        <tspan x={center.x} dy="18">
+                          IDX {region.index} {tagLabel}
+                        </tspan>
+                      </text>
+                    </g>
+                  );
+                })}
+
+                <polyline className="trajectory-line" points={pathData} />
+                {trajectoryPointsMeters.map((point, index) => {
+                  const canvasPoint = toTrackingCanvasCoord({ x: point.x * 1000, y: point.y * 1000 });
+                  return (
+                    <circle
+                      className={index === trajectoryPointsMeters.length - 1 ? "target-dot target-dot-active" : "target-dot"}
+                      cx={canvasPoint.x}
+                      cy={canvasPoint.y}
+                      key={`${point.x}-${point.y}`}
+                      r={index === trajectoryPointsMeters.length - 1 ? 8 : 5}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  );
+                })}
+                {indexedTargetPoints.map((target) => (
+                  <g className="indexed-target" key={target.index}>
+                    <circle cx={target.x} cy={target.y} r="14" vectorEffect="non-scaling-stroke" />
+                    <text x={target.x} y={target.y + 5}>
+                      {target.index}
+                    </text>
+                    <text className="target-kinesia-label" x={target.x + 18} y={target.y - 14}>
+                      {target.kinesia}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+            </div>
+          </section>
+
+          {renderDetailConfigWorkspace()}
+        </div>
+      </section>
+    );
+  };
+
+  const renderConfigPage = () => (
+    <section className="page-panel page-panel-wide config-page">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Device Configuration</p>
+          <h1>璁惧鍒濆鍖栫粦瀹氭祦绋?/h1>
+        </div>
+        {selectedDevice ? (
+          <section className="config-header-device" aria-label="褰撳墠鍒濆鍖栬澶?>
+            <div>
+              <span>褰撳墠璁惧</span>
+              <strong>{selectedDevice.name}</strong>
+            </div>
+            <div>
+              <span>MAC 鍦板潃</span>
+              <strong>{selectedDevice.macAddress}</strong>
+            </div>
+          </section>
+        ) : null}
+      </header>
+
+      {selectedDevice ? (
+        <>
+          {renderConfigFlow()}
+        </>
+      ) : (
+        <div className="empty-state empty-state-large">
+          <strong>鏈€夋嫨璁惧</strong>
+          <span>璇峰厛鍦ㄨ澶囩鐞嗕腑鎵弿骞堕€夋嫨璁惧銆?/span>
+          <button type="button" className="action-button action-primary" onClick={() => setPage("management")}>
+            杩斿洖璁惧绠＄悊
+          </button>
+        </div>
+      )}
+    </section>
+  );
+
+  const renderDetail = () => (
+    <section className="page-panel page-panel-wide">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Device Detail</p>
+          <h1>璁惧璇︽儏灞曠ず</h1>
+        </div>
+        {selectedDevice ? <span className="scan-badge scan-badge-done">璁惧鍦ㄧ嚎鐘舵€佹樉绀?/span> : null}
+      </header>
+
+      {selectedDevice ? (
+        <>
+          {renderTrackingWorkspace()}
+        </>
+      ) : (
+        <div className="empty-state empty-state-large">
+          <strong>鏈€夋嫨璁惧</strong>
+          <span>璇峰厛鍦ㄨ澶囩鐞嗕腑鎵弿骞堕€夋嫨璁惧銆?/span>
+          <button type="button" className="action-button action-primary" onClick={() => setPage("management")}>
+            杩斿洖璁惧绠＄悊
+          </button>
+        </div>
+      )}
+    </section>
+  );
+
+  return (
+    <main className="app-shell">
+      {renderSidebar()}
+      <div className="content-area">
+        {error ? <div className="notice notice-error">{error}</div> : null}
+        {message ? <div className="notice notice-ok">{message}</div> : null}
+        {page === "management" ? renderManagement() : null}
+        {page === "config" ? renderConfigPage() : null}
+        {page === "detail" ? renderDetail() : null}
+      </div>
+    </main>
+  );
+}
+
+export default App;
